@@ -36,6 +36,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    #[allow(unused)] // get rid of compiler warnings until we need to use this
     fn peek(&self) -> Token {
         self.tokens.get(self.current_pos + 1).unwrap_or(&Token::EOF).clone()
     }
@@ -105,7 +106,7 @@ impl<'a> Interpreter<'a> {
                     self.stack.push(TokenValue::Bool(operation(first, second)));
                 }
                 Token::Number(v) | Token::String(v) | Token::Bool(v) => self.stack.push(v.clone()),
-                Token::Ident(i) => {
+                Token::Ident(_) => {
 
                 }
                 Token::Print => {
