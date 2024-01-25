@@ -5,8 +5,8 @@ pub enum ConstantError {
     #[error("Please provide source file")]
     NoSourceFile,
 
-    #[error("Could not find provided source file")]
-    SourceFileNotFound,
+    #[error("Could not find provided source file '{0}'")]
+    SourceFileNotFound(String),
 
     #[error("String is not terminated before end of file")]
     StringNotTerminated,

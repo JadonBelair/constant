@@ -17,7 +17,7 @@ fn main() -> Result<()> {
     let file_contents = if let Ok(c) = std::fs::read_to_string(&args[1]) {
         c
     } else {
-        return Err(ConstantError::SourceFileNotFound.into());
+        return Err(ConstantError::SourceFileNotFound(args[1].clone()).into());
     };
 
     let tokens = Lexer::new(&file_contents).tokenize()?;
