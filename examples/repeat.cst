@@ -1,0 +1,2 @@
+// you can repeat strings with the '*' actions
+"HA " 3 * "HA!" + print

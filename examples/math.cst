@@ -1,0 +1,2 @@
+// this program computes (3 - 4 + 5) * 2, which equals 8
+3 4 - 5 + 2 * print

@@ -1,0 +1,2 @@
+// string concatination can be done with the '+' action
+"Hello, " "World!" + print
