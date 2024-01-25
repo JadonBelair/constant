@@ -85,19 +85,19 @@ impl Lexer {
             '+' => {
                 self.next();
                 Ok(Token::Plus)
-            },
+            }
             '-' => {
                 self.next();
                 Ok(Token::Minus)
-            },
+            }
             '*' => {
                 self.next();
                 Ok(Token::Asterisk)
-            },
+            }
             '/' => {
                 self.next();
                 Ok(Token::Slash)
-            },
+            }
             '>' => {
                 self.next();
                 Ok(if self.current_char == '=' {
@@ -106,9 +106,12 @@ impl Lexer {
                 } else if self.current_char.is_whitespace() || self.current_char == '\0' {
                     Token::GT
                 } else {
-                    return Err(ConstantError::InvalidString(format!(">{}", self.current_char), self.current_pos));
+                    return Err(ConstantError::InvalidString(
+                        format!(">{}", self.current_char),
+                        self.current_pos,
+                    ));
                 })
-            },
+            }
             '<' => {
                 self.next();
                 Ok(if self.current_char == '=' {
@@ -117,27 +120,36 @@ impl Lexer {
                 } else if self.current_char.is_whitespace() || self.current_char == '\0' {
                     Token::LT
                 } else {
-                    return Err(ConstantError::InvalidString(format!("<{}", self.current_char), self.current_pos-1));
+                    return Err(ConstantError::InvalidString(
+                        format!("<{}", self.current_char),
+                        self.current_pos - 1,
+                    ));
                 })
-            },
+            }
             '=' => {
                 self.next();
                 if self.current_char == '=' {
                     self.next();
                     Ok(Token::Eq)
                 } else {
-                    Err(ConstantError::InvalidString(format!("={}", self.current_char), self.current_pos-1))
+                    Err(ConstantError::InvalidString(
+                        format!("={}", self.current_char),
+                        self.current_pos - 1,
+                    ))
                 }
-            },
+            }
             '!' => {
                 self.next();
                 if self.current_char == '=' {
                     self.next();
                     Ok(Token::NotEq)
                 } else {
-                    Err(ConstantError::InvalidString(format!("!{}", self.current_char), self.current_pos-1))
+                    Err(ConstantError::InvalidString(
+                        format!("!{}", self.current_char),
+                        self.current_pos - 1,
+                    ))
                 }
-            },
+            }
             '0'..='9' => {
                 let start_pos = self.current_pos;
                 while self.current_char.is_numeric() {
@@ -152,9 +164,13 @@ impl Lexer {
                     }
                 }
 
-                let num = self.source[start_pos..self.current_pos].iter().collect::<String>().parse::<f32>().unwrap();
+                let num = self.source[start_pos..self.current_pos]
+                    .iter()
+                    .collect::<String>()
+                    .parse::<f32>()
+                    .unwrap();
                 Ok(Token::Number(TokenValue::Number(num)))
-            },
+            }
             '"' => {
                 self.next();
                 let start_pos = self.current_pos;
@@ -167,11 +183,13 @@ impl Lexer {
                     return Err(ConstantError::StringNotTerminated);
                 }
 
-                let tok = Token::String(TokenValue::String(self.source[start_pos..self.current_pos].iter().collect()));
+                let tok = Token::String(TokenValue::String(
+                    self.source[start_pos..self.current_pos].iter().collect(),
+                ));
                 self.next(); // consumes the ending "
 
                 Ok(tok)
-            },
+            }
             'a'..='z' | 'A'..='Z' => {
                 let start_pos = self.current_pos;
 
@@ -185,9 +203,12 @@ impl Lexer {
                 } else {
                     Err(ConstantError::InvalidString(text, start_pos))
                 }
-            },
+            }
             '\0' => Ok(Token::EOF),
-            _ => Err(ConstantError::InvalidString(format!("{}", self.current_char), self.current_pos))
+            _ => Err(ConstantError::InvalidString(
+                format!("{}", self.current_char),
+                self.current_pos,
+            )),
         }
     }
 
@@ -235,8 +256,16 @@ mod tests {
     fn lexer_next_token_string() -> Result<()> {
         let mut l = Lexer::new("\"this is a test string\" \"this is another test string\"");
 
-        assert!(l.next_token()? == Token::String(TokenValue::String(String::from("this is a test string"))));
-        assert!(l.next_token()? == Token::String(TokenValue::String(String::from("this is another test string"))));
+        assert!(
+            l.next_token()?
+                == Token::String(TokenValue::String(String::from("this is a test string")))
+        );
+        assert!(
+            l.next_token()?
+                == Token::String(TokenValue::String(String::from(
+                    "this is another test string"
+                )))
+        );
         assert!(l.next_token()? == Token::EOF);
 
         Ok(())
@@ -245,7 +274,7 @@ mod tests {
     #[test]
     fn lexer_next_token_bool() -> Result<()> {
         let mut l = Lexer::new("true false true");
-        
+
         assert!(l.next_token()? == Token::Bool(TokenValue::Bool(true)));
         assert!(l.next_token()? == Token::Bool(TokenValue::Bool(false)));
         assert!(l.next_token()? == Token::Bool(TokenValue::Bool(true)));

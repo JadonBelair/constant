@@ -1,0 +1,5 @@
+// constant has a few built-in functions to make handling the stack easier
+// dup duplicates the top item on the stack
+// while swap swaps the top two items
+
+5 10 dup + swap print print // this prints 5 first and then 20

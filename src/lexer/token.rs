@@ -1,4 +1,9 @@
-use std::{ops::{Add, Sub, Mul, Div}, fmt::Display};
+use std::{
+    fmt::Display,
+    ops::{Add, Div, Mul, Sub},
+};
+
+use crate::error::ConstantError;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -46,23 +51,27 @@ impl Display for TokenValue {
 }
 
 impl Add<TokenValue> for TokenValue {
-    type Output = Self;
+    type Output = Result<Self, ConstantError>;
 
     fn add(self, rhs: Self) -> Self::Output {
         match self {
             Self::Number(n) => {
                 if let Self::Number(m) = rhs {
-                    Self::Number(n + m)
+                    Ok(Self::Number(n + m))
                 } else {
-                    panic!("Error: Can only add numbers to numbers");
+                    Err(ConstantError::InvalidOperation(String::from("Can only add numbers to numbers")))
                 }
-            },
-            Self::Bool(_) => panic!("Error: Cannot add bool"),
+            }
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot add booleans",
+            ))),
             Self::String(s) => {
                 if let Self::String(z) = rhs {
-                    Self::String(s+&z)
+                    Ok(Self::String(s + &z))
                 } else {
-                    panic!("Error: Can only add strings to strings");
+                    Err(ConstantError::InvalidOperation(String::from(
+                        "Can only add strings to strings",
+                    )))
                 }
             }
         }
@@ -70,43 +79,53 @@ impl Add<TokenValue> for TokenValue {
 }
 
 impl Sub<TokenValue> for TokenValue {
-    type Output = Self;
+    type Output = Result<Self, ConstantError>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         match self {
             Self::Number(n) => {
                 if let Self::Number(m) = rhs {
-                    Self::Number(n - m)
+                    Ok(Self::Number(n - m))
                 } else {
-                    panic!("Error: Can only subtract numbers to numbers");
+                    Err(ConstantError::InvalidOperation(String::from(
+                        "Can only subtract numbers from numbers",
+                    )))
                 }
-            },
-            Self::Bool(_) => panic!("Error: Cannot subtract bool"),
-            Self::String(_) => {
-                panic!("Error: Cannot subtract strings");
             }
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot subtract booleans",
+            ))),
+            Self::String(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot subtract strings",
+            ))),
         }
     }
 }
 
 impl Mul<TokenValue> for TokenValue {
-    type Output = Self;
+    type Output = Result<Self, ConstantError>;
 
     fn mul(self, rhs: Self) -> Self::Output {
         match self {
             Self::Number(n) => {
                 if let Self::Number(m) = rhs {
-                    Self::Number(n*m)
+                    Ok(Self::Number(n * m))
                 } else {
-                    panic!("Error: Can only multiply numbers to numbers");
+                    Err(ConstantError::InvalidOperation(String::from(
+                        "Can only multiply numbers with numbers",
+                    )))
                 }
-            },
-            Self::Bool(_) => panic!("Error: Cannot subtract bool"),
+            }
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot multiply booleans",
+            ))),
             Self::String(s) => {
                 if let Self::Number(n) = rhs {
-                    Self::String(s.repeat(n as usize))
+                    Ok(Self::String(s.repeat(n as usize)))
                 } else {
-                    panic!("Error: Can only multiply strings with numbers");
+                    Err(ConstantError::InvalidOperation(String::from(
+                        "Can only multiply strings with numbers",
+                    )))
                 }
             }
         }
@@ -114,19 +133,25 @@ impl Mul<TokenValue> for TokenValue {
 }
 
 impl Div<TokenValue> for TokenValue {
-    type Output = Self;
+    type Output = Result<Self, ConstantError>;
 
     fn div(self, rhs: Self) -> Self::Output {
         match self {
             Self::Number(n) => {
                 if let Self::Number(m) = rhs {
-                    Self::Number(n/m)
+                    Ok(Self::Number(n / m))
                 } else {
-                    panic!("Error: Can only divide numbers with numbers");
+                    Err(ConstantError::InvalidOperation(String::from(
+                        "Can only divide numbers with number",
+                    )))
                 }
-            },
-            Self::Bool(_) => panic!("Error: Cannot divide with booleans"),
-            Self::String(_) => panic!("Error: Cannot divide with strings"),
+            }
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot divide with booleans",
+            ))),
+            Self::String(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot divide with strings",
+            ))),
         }
     }
 }

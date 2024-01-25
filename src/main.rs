@@ -4,9 +4,9 @@ use error::ConstantError;
 use interpreter::Interpreter;
 use lexer::Lexer;
 
-mod lexer;
-mod interpreter;
 mod error;
+mod interpreter;
+mod lexer;
 
 fn main() -> Result<()> {
     let args = std::env::args().collect::<Vec<String>>();

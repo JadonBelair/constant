@@ -16,4 +16,7 @@ pub enum ConstantError {
 
     #[error("{0} requires at least {1} items on the stack")]
     InvalidStackAmount(String, usize),
+
+    #[error("Invalid operation: {0}")]
+    InvalidOperation(String),
 }

@@ -1,4 +1,7 @@
-use crate::{lexer::{TokenValue, Token}, error::ConstantError};
+use crate::{
+    error::ConstantError,
+    lexer::{Token, TokenValue},
+};
 
 pub struct Interpreter<'a> {
     stack: Vec<TokenValue>,
@@ -9,161 +12,88 @@ impl<'a> Interpreter<'a> {
     pub fn new(tokens: &'a Vec<Token>) -> Self {
         Self {
             stack: Vec::new(),
-            tokens
+            tokens,
         }
     }
 
     pub fn interpret(&mut self) -> Result<(), ConstantError> {
         for token in self.tokens {
             match token {
-                Token::Plus => {
+                Token::Plus | Token::Minus | Token::Asterisk | Token::Slash => {
+                    let action = match token {
+                        Token::Plus => "Addition",
+                        Token::Minus => "Subtraction",
+                        Token::Asterisk => "Multiplication",
+                        Token::Slash => "Division",
+                        _ => unreachable!(),
+                    };
+
                     let second = if let Some(val) = self.stack.pop() {
                         val
                     } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Addition"), 2));
+                        return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
                     };
                     let first = if let Some(val) = self.stack.pop() {
                         val
                     } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Addition"), 2));
+                        return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
                     };
 
-                    self.stack.push(first + second);
-                },
-                Token::Minus => {
+                    // find a way to combine with above that doesnt result in weird error about closures
+                    let result = match token {
+                        Token::Plus => first + second,
+                        Token::Minus => first - second,
+                        Token::Asterisk => first * second,
+                        Token::Slash => first / second,
+                        _ => unreachable!(),
+                    };
+
+                    self.stack.push(result?);
+                }
+                Token::GT | Token::LT | Token::Eq | Token::GTEq | Token::LTEq | Token::NotEq => {
                     let second = if let Some(val) = self.stack.pop() {
                         val
                     } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Subtraction"), 2));
+                        return Err(ConstantError::InvalidStackAmount(
+                            String::from("Comparison"),
+                            2,
+                        ));
                     };
                     let first = if let Some(val) = self.stack.pop() {
                         val
                     } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Subtraction"), 2));
+                        return Err(ConstantError::InvalidStackAmount(
+                            String::from("Comparison"),
+                            2,
+                        ));
                     };
 
-                    self.stack.push(first - second);
-                },
-                Token::Asterisk => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Multiplication"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Multiplication"), 2));
+                    let operation = match token {
+                        Token::GT => |x: TokenValue, y: TokenValue| x > y,
+                        Token::LT => |x: TokenValue, y: TokenValue| x < y,
+                        Token::Eq => |x: TokenValue, y: TokenValue| x == y,
+                        Token::GTEq => |x: TokenValue, y: TokenValue| x >= y,
+                        Token::LTEq => |x: TokenValue, y: TokenValue| x <= y,
+                        Token::NotEq => |x: TokenValue, y: TokenValue| x != y,
+                        _ => unreachable!(),
                     };
 
-                    self.stack.push(first * second);
-                },
-                Token::Slash => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Division"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Division"), 2));
-                    };
-
-                    self.stack.push(first / second);
-                },
-                Token::GT => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-
-                    self.stack.push(TokenValue::Bool(first > second));
-                },
-                Token::LT => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-
-                    self.stack.push(TokenValue::Bool(first < second));
-                },
-                Token::Eq => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-
-                    self.stack.push(TokenValue::Bool(first == second));
-                },
-                Token::GTEq => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-
-                    self.stack.push(TokenValue::Bool(first >= second));
-                },
-                Token::LTEq => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-
-                    self.stack.push(TokenValue::Bool(first <= second));
-                },
-                Token::NotEq => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Comparison"), 2));
-                    };
-
-                    self.stack.push(TokenValue::Bool(first != second));
-                },
+                    self.stack.push(TokenValue::Bool(operation(first, second)));
+                }
                 Token::Number(v) | Token::String(v) | Token::Bool(v) => self.stack.push(v.clone()),
                 Token::Print => {
-                    println!("{}", if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Printing"), 1));
-                    })
-                },
+                    println!(
+                        "{}",
+                        if let Some(val) = self.stack.pop() {
+                            val
+                        } else {
+                            return Err(ConstantError::InvalidStackAmount(
+                                String::from("Printing"),
+                                1,
+                            ));
+                        }
+                    )
+                }
                 Token::Dup => {
                     let value = if let Some(val) = self.stack.pop() {
                         val
@@ -173,28 +103,37 @@ impl<'a> Interpreter<'a> {
 
                     self.stack.push(value.clone());
                     self.stack.push(value);
-                },
+                }
                 Token::Swap => {
                     let first = if let Some(val) = self.stack.pop() {
                         val
                     } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Swapping"), 2));
+                        return Err(ConstantError::InvalidStackAmount(
+                            String::from("Swapping"),
+                            2,
+                        ));
                     };
                     let second = if let Some(val) = self.stack.pop() {
                         val
                     } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Swapping"), 2));
+                        return Err(ConstantError::InvalidStackAmount(
+                            String::from("Swapping"),
+                            2,
+                        ));
                     };
-                    
+
                     self.stack.push(first);
                     self.stack.push(second);
-                },
+                }
                 Token::Drop => {
                     if self.stack.pop().is_none() {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Dropping"), 1));
+                        return Err(ConstantError::InvalidStackAmount(
+                            String::from("Dropping"),
+                            1,
+                        ));
                     }
                 }
-                Token::EOF => ()
+                Token::EOF => (),
             }
         }
 
