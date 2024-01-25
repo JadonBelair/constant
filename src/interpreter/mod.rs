@@ -6,21 +6,45 @@ use crate::{
 pub struct Interpreter<'a> {
     stack: Vec<TokenValue>,
     tokens: &'a Vec<Token>,
+    current_token: Token,
+    current_pos: usize,
 }
 
 impl<'a> Interpreter<'a> {
     pub fn new(tokens: &'a Vec<Token>) -> Self {
-        Self {
+        let mut i = Self {
             stack: Vec::new(),
             tokens,
+            current_token: Token::EOF,
+            current_pos: 0,
+        };
+        if let Some(tok) = i.tokens.get(0) {
+            i.current_token = tok.clone();
+        }
+
+        i
+    }
+
+    fn next(&mut self) {
+        self.current_pos += 1.clamp(0, self.tokens.len());
+
+        if self.current_pos >= self.tokens.len() {
+            self.current_token = Token::EOF;
+            self.current_pos = self.tokens.len();
+        } else {
+            self.current_token = self.tokens[self.current_pos].clone();
         }
     }
 
+    fn peek(&self) -> Token {
+        self.tokens.get(self.current_pos + 1).unwrap_or(&Token::EOF).clone()
+    }
+
     pub fn interpret(&mut self) -> Result<(), ConstantError> {
-        for token in self.tokens {
-            match token {
+        while self.current_token != Token::EOF {
+            match &self.current_token {
                 Token::Plus | Token::Minus | Token::Asterisk | Token::Slash => {
-                    let action = match token {
+                    let action = match &self.current_token {
                         Token::Plus => "Addition",
                         Token::Minus => "Subtraction",
                         Token::Asterisk => "Multiplication",
@@ -40,7 +64,7 @@ impl<'a> Interpreter<'a> {
                     };
 
                     // find a way to combine with above that doesnt result in weird error about closures
-                    let result = match token {
+                    let result = match &self.current_token {
                         Token::Plus => first + second,
                         Token::Minus => first - second,
                         Token::Asterisk => first * second,
@@ -68,7 +92,7 @@ impl<'a> Interpreter<'a> {
                         ));
                     };
 
-                    let operation = match token {
+                    let operation = match &self.current_token {
                         Token::GT => |x: TokenValue, y: TokenValue| x > y,
                         Token::LT => |x: TokenValue, y: TokenValue| x < y,
                         Token::Eq => |x: TokenValue, y: TokenValue| x == y,
@@ -81,6 +105,9 @@ impl<'a> Interpreter<'a> {
                     self.stack.push(TokenValue::Bool(operation(first, second)));
                 }
                 Token::Number(v) | Token::String(v) | Token::Bool(v) => self.stack.push(v.clone()),
+                Token::Ident(i) => {
+
+                }
                 Token::Print => {
                     println!(
                         "{}",
@@ -135,6 +162,8 @@ impl<'a> Interpreter<'a> {
                 }
                 Token::EOF => (),
             }
+
+            self.next();
         }
 
         Ok(())
