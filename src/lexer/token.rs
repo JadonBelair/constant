@@ -61,7 +61,9 @@ impl Add<TokenValue> for TokenValue {
                 if let Self::Number(m) = rhs {
                     Ok(Self::Number(n + m))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from("Can only add numbers to numbers")))
+                    Err(ConstantError::InvalidOperation(String::from(
+                        "Can only add numbers to numbers",
+                    )))
                 }
             }
             Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
