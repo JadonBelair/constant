@@ -201,7 +201,7 @@ impl Lexer {
                 if let Some(k) = KEYWORDS.get(&text) {
                     Ok(k.clone())
                 } else {
-                    Err(ConstantError::InvalidString(text, start_pos))
+                    Ok(Token::Ident(text))
                 }
             }
             '\0' => Ok(Token::EOF),
