@@ -3,6 +3,7 @@ use anyhow::Result;
 use error::ConstantError;
 use interpreter::Interpreter;
 use lexer::Lexer;
+use parser::Parser;
 
 mod error;
 mod interpreter;
@@ -21,7 +22,8 @@ fn main() -> Result<()> {
         };
 
         let tokens = Lexer::new(&file_contents).tokenize()?;
-        Ok(Interpreter::new(tokens).interpret()?)
+        let ast = Parser::new(tokens).parse()?;
+        Ok(Interpreter::new(ast).interpret()?)
     } else {
         return Err(ConstantError::NoSourceFile.into());
     }

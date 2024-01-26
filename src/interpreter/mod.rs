@@ -2,57 +2,73 @@ use std::io::Write;
 
 use crate::{
     error::ConstantError,
-    lexer::{Lexer, Token, TokenType, Literal},
+    lexer::{Lexer, Literal}, parser::{Statement, Value, SingleOpType, DoubleOpType, Parser},
 };
 
 pub struct Interpreter {
     stack: Vec<Literal>,
-    tokens: Vec<Token>,
-    current_token: Token,
+    program: Vec<Statement>,
+    current_statement: Statement,
     current_pos: usize,
 }
 
 impl Interpreter {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        let mut tokens = tokens;
-        if tokens.last() != Some(&Token::eof()) {
-            tokens.push(Token::eof());
+    pub fn new(program: Vec<Statement>) -> Self {
+        let mut program = program;
+        if program.last() != Some(&Statement::Empty) {
+            program.push(Statement::Empty);
         }
-        let current_token = tokens[0].clone();
+        let current_statement = program[0].clone();
 
         Self {
             stack: Vec::new(),
-            tokens,
-            current_token,
+            program,
+            current_statement,
             current_pos: 0,
         }
     }
 
     fn next(&mut self) {
-        if let Some(t) = self.tokens.get(self.current_pos + 1) {
+        if let Some(t) = self.program.get(self.current_pos + 1) {
             self.current_pos += 1;
-            self.current_token = t.clone();
+            self.current_statement = t.clone();
         }
     }
 
-    #[allow(unused)] // get rid of compiler warnings until we need to use this
-    fn peek(&self) -> Token {
-        self.tokens
-            .get(self.current_pos + 1)
-            .unwrap_or(&Token::eof())
-            .clone()
-    }
-
     pub fn interpret(&mut self) -> Result<(), ConstantError> {
-        while self.current_token.token_type != TokenType::EOF {
-            match &self.current_token.token_type {
-                TokenType::Plus | TokenType::Minus | TokenType::Asterisk | TokenType::Slash => {
-                    let action = match &self.current_token.token_type {
-                        TokenType::Plus => "Addition",
-                        TokenType::Minus => "Subtraction",
-                        TokenType::Asterisk => "Multiplication",
-                        TokenType::Slash => "Division",
-                        _ => unreachable!(),
+        while self.current_statement != Statement::Empty {
+            match &self.current_statement {
+                Statement::Push(Value::Literal(l)) => self.stack.push(l.clone()),
+                Statement::SingleOperation(o) => {
+                    let action = match o {
+                        SingleOpType::Print => "Printing",
+                        SingleOpType::Dup => "Duping",
+                        SingleOpType::Drop => "Dropping",
+                    };
+
+                    let val = if let Some(val) = self.stack.pop() {
+                        val
+                    } else {
+                        return Err(ConstantError::InvalidStackAmount(String::from(action), 1));
+                    };
+
+                    match o {
+                        SingleOpType::Print => println!("{val}"),
+                        SingleOpType::Dup => {
+                            self.stack.push(val.clone());
+                            self.stack.push(val);
+                        }
+                        SingleOpType::Drop => (),
+                    }
+                }
+                Statement::DoubleOperation(o) => {
+                    let action = match o {
+                        DoubleOpType::Add => "Addition",
+                        DoubleOpType::Sub => "Subtraction",
+                        DoubleOpType::Mul => "Multiplication",
+                        DoubleOpType::Div => "Division",
+                        DoubleOpType::Swap => "Swapping",
+                        _ => "Comparison",
                     };
 
                     let second = if let Some(val) = self.stack.pop() {
@@ -64,119 +80,33 @@ impl Interpreter {
                         val
                     } else {
                         // we restore the stack on a failed operation
-                        // doens't really matter for interpreted mode 
+                        // doens't really matter for interpreted mode
                         // but it's a nice feature to have in the REPL
                         self.stack.push(second);
                         return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
                     };
 
-                    // find a way to combine with above that doesnt result in weird error about closures
-                    let operation = |first: Literal, second: Literal| {
-                        match &self.current_token.token_type {
-                            TokenType::Plus => first + second,
-                            TokenType::Minus => first - second,
-                            TokenType::Asterisk => first * second,
-                            TokenType::Slash => first / second,
-                            _ => unreachable!(),
-                        }
-                    };
-
-                    match operation(first.clone(), second.clone()) {
-                        Ok(v) => self.stack.push(v),
-                        Err(e) => {
-                            self.stack.push(first);
-                            self.stack.push(second);
-                            return Err(e);
-                        }
+                    if o == &DoubleOpType::Swap {
+                        self.stack.push(first.clone());
                     }
-                }
-                TokenType::GT | TokenType::LT | TokenType::Eq | TokenType::GTEq | TokenType::LTEq | TokenType::NotEq => {
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(
-                            String::from("Comparison"),
-                            2,
-                        ));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        self.stack.push(second);
-                        return Err(ConstantError::InvalidStackAmount(
-                            String::from("Comparison"),
-                            2,
-                        ));
-                    };
 
-                    let operation = |x: Literal, y: Literal | {
-                        match &self.current_token.token_type {
-                            TokenType::GT => x > y,
-                            TokenType::LT => x < y,
-                            TokenType::Eq => x == y,
-                            TokenType::GTEq => x >= y,
-                            TokenType::LTEq => x <= y,
-                            TokenType::NotEq => x != y,
-                            _ => unreachable!(),
-                        }
-                    };
-                    self.stack.push(Literal::Bool(operation(first, second)));
+                    self.stack.push(
+                        match o {
+                            DoubleOpType::Add => first + second,
+                            DoubleOpType::Sub => first - second,
+                            DoubleOpType::Mul => first * second,
+                            DoubleOpType::Div => first / second,
+                            DoubleOpType::Swap => Ok(second),
+                            DoubleOpType::GT => Ok(Literal::Bool(first > second)),
+                            DoubleOpType::GTEq => Ok(Literal::Bool(first >= second)),
+                            DoubleOpType::LT => Ok(Literal::Bool(first < second)),
+                            DoubleOpType::LTEq => Ok(Literal::Bool(first <= second)),
+                            DoubleOpType::Eq => Ok(Literal::Bool(first == second)),
+                            DoubleOpType::NotEq => Ok(Literal::Bool(first != second)),
+                        }?
+                    );
                 }
-                TokenType::Number | TokenType::String | TokenType::Bool => self.stack.push(self.current_token.literal.clone().unwrap()),
-                TokenType::Print => {
-                    println!(
-                        "{}",
-                        if let Some(val) = self.stack.pop() {
-                            val
-                        } else {
-                            return Err(ConstantError::InvalidStackAmount(
-                                String::from("Printing"),
-                                1,
-                            ));
-                        }
-                    )
-                }
-                TokenType::Dup => {
-                    let value = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from("Duping"), 1));
-                    };
-
-                    self.stack.push(value.clone());
-                    self.stack.push(value);
-                }
-                TokenType::Swap => {
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(
-                            String::from("Swapping"),
-                            2,
-                        ));
-                    };
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        self.stack.push(first);
-                        return Err(ConstantError::InvalidStackAmount(
-                            String::from("Swapping"),
-                            2,
-                        ));
-                    };
-
-                    self.stack.push(first);
-                    self.stack.push(second);
-                }
-                TokenType::Drop => {
-                    if self.stack.pop().is_none() {
-                        return Err(ConstantError::InvalidStackAmount(
-                            String::from("Dropping"),
-                            1,
-                        ));
-                    }
-                }
-                TokenType::EOF => (),
+                Statement::Empty => (),
             }
 
             self.next();
@@ -202,15 +132,24 @@ impl Interpreter {
                 return;
             }
 
-            match Lexer::new(&code).tokenize() {
-                Ok(tokens) => self.tokens = tokens,
+            let tokens = match Lexer::new(&code).tokenize() {
+                Ok(tokens) => tokens,
                 Err(e) => {
                     println!("{e}");
                     continue;
                 }
             };
+            let ast = match Parser::new(tokens).parse() {
+                Ok(a) => a,
+                Err(e) => {
+                    println!("{e}");
+                    continue;
+                }
+            };
+            
+            self.program = ast;
+            self.current_statement = self.program[0].clone();
             self.current_pos = 0;
-            self.current_token = self.tokens[0].clone();
 
             if let Err(e) = self.interpret() {
                 println!("{e}");

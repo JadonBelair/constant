@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use lazy_static::lazy_static;
-pub use token::{Token, TokenType, Literal};
+pub use token::{Literal, Token, TokenType};
 
 use crate::error::ConstantError;
 
@@ -10,12 +10,30 @@ mod token;
 lazy_static! {
     static ref KEYWORDS: HashMap<String, Token> = {
         let mut h = HashMap::new();
-        h.insert(String::from("true"), Token::new(TokenType::Bool, "true".into(), Some(Literal::Bool(true))));
-        h.insert(String::from("false"), Token::new(TokenType::Bool, "false".into(), Some(Literal::Bool(false))));
-        h.insert(String::from("print"), Token::new(TokenType::Print, "print".into(), None));
-        h.insert(String::from("dup"), Token::new(TokenType::Dup, "dup".into(), None));
-        h.insert(String::from("swap"), Token::new(TokenType::Swap, "swap".into(), None));
-        h.insert(String::from("drop"), Token::new(TokenType::Drop, "drop".into(), None));
+        h.insert(
+            String::from("true"),
+            Token::new(TokenType::Bool, "true".into(), Some(Literal::Bool(true))),
+        );
+        h.insert(
+            String::from("false"),
+            Token::new(TokenType::Bool, "false".into(), Some(Literal::Bool(false))),
+        );
+        h.insert(
+            String::from("print"),
+            Token::new(TokenType::Print, "print".into(), None),
+        );
+        h.insert(
+            String::from("dup"),
+            Token::new(TokenType::Dup, "dup".into(), None),
+        );
+        h.insert(
+            String::from("swap"),
+            Token::new(TokenType::Swap, "swap".into(), None),
+        );
+        h.insert(
+            String::from("drop"),
+            Token::new(TokenType::Drop, "drop".into(), None),
+        );
         h
     };
 }
@@ -165,11 +183,13 @@ impl Lexer {
                     .iter()
                     .collect::<String>();
 
-                let num = text
-                    .parse::<f32>()
-                    .unwrap();
+                let num = text.parse::<f32>().unwrap();
 
-                Ok(Token::new(TokenType::Number, text, Some(Literal::Number(num))))
+                Ok(Token::new(
+                    TokenType::Number,
+                    text,
+                    Some(Literal::Number(num)),
+                ))
             }
             '"' => {
                 self.next();
@@ -186,7 +206,13 @@ impl Lexer {
                 let text = self.source[start_pos..self.current_pos]
                     .iter()
                     .collect::<String>();
-                let tok = Token::new(TokenType::String, self.source[(start_pos-1)..=self.current_pos].iter().collect(), Some(Literal::String(text)));
+                let tok = Token::new(
+                    TokenType::String,
+                    self.source[(start_pos - 1)..=self.current_pos]
+                        .iter()
+                        .collect(),
+                    Some(Literal::String(text)),
+                );
 
                 self.next(); // consumes the ending "
 
@@ -259,8 +285,7 @@ mod tests {
         let mut l = Lexer::new("\"this is a test string\" \"this is another test string\"");
 
         assert!(
-            l.next_token()?.literal.unwrap()
-                == Literal::String("this is a test string".into())
+            l.next_token()?.literal.unwrap() == Literal::String("this is a test string".into())
         );
         assert!(
             l.next_token()?.literal.unwrap()
