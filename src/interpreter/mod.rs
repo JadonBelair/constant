@@ -2,11 +2,11 @@ use std::io::Write;
 
 use crate::{
     error::ConstantError,
-    lexer::{Lexer, Token, TokenValue},
+    lexer::{Lexer, Token, TokenType, Literal},
 };
 
 pub struct Interpreter {
-    stack: Vec<TokenValue>,
+    stack: Vec<Literal>,
     tokens: Vec<Token>,
     current_token: Token,
     current_pos: usize,
@@ -15,8 +15,8 @@ pub struct Interpreter {
 impl Interpreter {
     pub fn new(tokens: Vec<Token>) -> Self {
         let mut tokens = tokens;
-        if tokens.last() != Some(&Token::EOF) {
-            tokens.push(Token::EOF);
+        if tokens.last() != Some(&Token::eof()) {
+            tokens.push(Token::eof());
         }
         let current_token = tokens[0].clone();
 
@@ -39,19 +39,19 @@ impl Interpreter {
     fn peek(&self) -> Token {
         self.tokens
             .get(self.current_pos + 1)
-            .unwrap_or(&Token::EOF)
+            .unwrap_or(&Token::eof())
             .clone()
     }
 
     pub fn interpret(&mut self) -> Result<(), ConstantError> {
-        while self.current_token != Token::EOF {
-            match &self.current_token {
-                Token::Plus | Token::Minus | Token::Asterisk | Token::Slash => {
-                    let action = match &self.current_token {
-                        Token::Plus => "Addition",
-                        Token::Minus => "Subtraction",
-                        Token::Asterisk => "Multiplication",
-                        Token::Slash => "Division",
+        while self.current_token.token_type != TokenType::EOF {
+            match &self.current_token.token_type {
+                TokenType::Plus | TokenType::Minus | TokenType::Asterisk | TokenType::Slash => {
+                    let action = match &self.current_token.token_type {
+                        TokenType::Plus => "Addition",
+                        TokenType::Minus => "Subtraction",
+                        TokenType::Asterisk => "Multiplication",
+                        TokenType::Slash => "Division",
                         _ => unreachable!(),
                     };
 
@@ -71,12 +71,12 @@ impl Interpreter {
                     };
 
                     // find a way to combine with above that doesnt result in weird error about closures
-                    let operation = |first: TokenValue, second: TokenValue| {
-                        match &self.current_token {
-                            Token::Plus => first + second,
-                            Token::Minus => first - second,
-                            Token::Asterisk => first * second,
-                            Token::Slash => first / second,
+                    let operation = |first: Literal, second: Literal| {
+                        match &self.current_token.token_type {
+                            TokenType::Plus => first + second,
+                            TokenType::Minus => first - second,
+                            TokenType::Asterisk => first * second,
+                            TokenType::Slash => first / second,
                             _ => unreachable!(),
                         }
                     };
@@ -90,7 +90,7 @@ impl Interpreter {
                         }
                     }
                 }
-                Token::GT | Token::LT | Token::Eq | Token::GTEq | Token::LTEq | Token::NotEq => {
+                TokenType::GT | TokenType::LT | TokenType::Eq | TokenType::GTEq | TokenType::LTEq | TokenType::NotEq => {
                     let second = if let Some(val) = self.stack.pop() {
                         val
                     } else {
@@ -109,21 +109,21 @@ impl Interpreter {
                         ));
                     };
 
-                    let operation = |x: TokenValue, y: TokenValue| {
-                        match &self.current_token {
-                            Token::GT => x > y,
-                            Token::LT => x < y,
-                            Token::Eq => x == y,
-                            Token::GTEq => x >= y,
-                            Token::LTEq => x <= y,
-                            Token::NotEq => x != y,
+                    let operation = |x: Literal, y: Literal | {
+                        match &self.current_token.token_type {
+                            TokenType::GT => x > y,
+                            TokenType::LT => x < y,
+                            TokenType::Eq => x == y,
+                            TokenType::GTEq => x >= y,
+                            TokenType::LTEq => x <= y,
+                            TokenType::NotEq => x != y,
                             _ => unreachable!(),
                         }
                     };
-                    self.stack.push(TokenValue::Bool(operation(first, second)));
+                    self.stack.push(Literal::Bool(operation(first, second)));
                 }
-                Token::Number(v) | Token::String(v) | Token::Bool(v) => self.stack.push(v.clone()),
-                Token::Print => {
+                TokenType::Number | TokenType::String | TokenType::Bool => self.stack.push(self.current_token.literal.clone().unwrap()),
+                TokenType::Print => {
                     println!(
                         "{}",
                         if let Some(val) = self.stack.pop() {
@@ -136,7 +136,7 @@ impl Interpreter {
                         }
                     )
                 }
-                Token::Dup => {
+                TokenType::Dup => {
                     let value = if let Some(val) = self.stack.pop() {
                         val
                     } else {
@@ -146,7 +146,7 @@ impl Interpreter {
                     self.stack.push(value.clone());
                     self.stack.push(value);
                 }
-                Token::Swap => {
+                TokenType::Swap => {
                     let first = if let Some(val) = self.stack.pop() {
                         val
                     } else {
@@ -168,7 +168,7 @@ impl Interpreter {
                     self.stack.push(first);
                     self.stack.push(second);
                 }
-                Token::Drop => {
+                TokenType::Drop => {
                     if self.stack.pop().is_none() {
                         return Err(ConstantError::InvalidStackAmount(
                             String::from("Dropping"),
@@ -176,7 +176,7 @@ impl Interpreter {
                         ));
                     }
                 }
-                Token::EOF => (),
+                TokenType::EOF => (),
             }
 
             self.next();

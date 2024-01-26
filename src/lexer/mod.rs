@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use lazy_static::lazy_static;
-pub use token::{Token, TokenValue};
+pub use token::{Token, TokenType, Literal};
 
 use crate::error::ConstantError;
 
@@ -10,12 +10,12 @@ mod token;
 lazy_static! {
     static ref KEYWORDS: HashMap<String, Token> = {
         let mut h = HashMap::new();
-        h.insert(String::from("true"), Token::Bool(TokenValue::Bool(true)));
-        h.insert(String::from("false"), Token::Bool(TokenValue::Bool(false)));
-        h.insert(String::from("print"), Token::Print);
-        h.insert(String::from("dup"), Token::Dup);
-        h.insert(String::from("swap"), Token::Swap);
-        h.insert(String::from("drop"), Token::Drop);
+        h.insert(String::from("true"), Token::new(TokenType::Bool, "true".into(), Some(Literal::Bool(true))));
+        h.insert(String::from("false"), Token::new(TokenType::Bool, "false".into(), Some(Literal::Bool(false))));
+        h.insert(String::from("print"), Token::new(TokenType::Print, "print".into(), None));
+        h.insert(String::from("dup"), Token::new(TokenType::Dup, "dup".into(), None));
+        h.insert(String::from("swap"), Token::new(TokenType::Swap, "swap".into(), None));
+        h.insert(String::from("drop"), Token::new(TokenType::Drop, "drop".into(), None));
         h
     };
 }
@@ -81,27 +81,27 @@ impl Lexer {
         match self.current_char {
             '+' => {
                 self.next();
-                Ok(Token::Plus)
+                Ok(Token::new(TokenType::Plus, '+'.into(), None))
             }
             '-' => {
                 self.next();
-                Ok(Token::Minus)
+                Ok(Token::new(TokenType::Minus, '-'.into(), None))
             }
             '*' => {
                 self.next();
-                Ok(Token::Asterisk)
+                Ok(Token::new(TokenType::Asterisk, '*'.into(), None))
             }
             '/' => {
                 self.next();
-                Ok(Token::Slash)
+                Ok(Token::new(TokenType::Slash, '/'.into(), None))
             }
             '>' => {
                 self.next();
                 Ok(if self.current_char == '=' {
                     self.next();
-                    Token::GTEq
+                    Token::new(TokenType::GTEq, ">=".into(), None)
                 } else if self.current_char.is_whitespace() || self.current_char == '\0' {
-                    Token::GT
+                    Token::new(TokenType::GT, ">".into(), None)
                 } else {
                     return Err(ConstantError::InvalidString(
                         format!(">{}", self.current_char),
@@ -113,9 +113,9 @@ impl Lexer {
                 self.next();
                 Ok(if self.current_char == '=' {
                     self.next();
-                    Token::LTEq
+                    Token::new(TokenType::LTEq, "<=".into(), None)
                 } else if self.current_char.is_whitespace() || self.current_char == '\0' {
-                    Token::LT
+                    Token::new(TokenType::LT, "<".into(), None)
                 } else {
                     return Err(ConstantError::InvalidString(
                         format!("<{}", self.current_char),
@@ -127,7 +127,7 @@ impl Lexer {
                 self.next();
                 if self.current_char == '=' {
                     self.next();
-                    Ok(Token::Eq)
+                    Ok(Token::new(TokenType::Eq, "==".into(), None))
                 } else {
                     Err(ConstantError::InvalidString(
                         format!("={}", self.current_char),
@@ -139,7 +139,7 @@ impl Lexer {
                 self.next();
                 if self.current_char == '=' {
                     self.next();
-                    Ok(Token::NotEq)
+                    Ok(Token::new(TokenType::NotEq, "!=".into(), None))
                 } else {
                     Err(ConstantError::InvalidString(
                         format!("!{}", self.current_char),
@@ -161,12 +161,15 @@ impl Lexer {
                     }
                 }
 
-                let num = self.source[start_pos..self.current_pos]
+                let text = self.source[start_pos..self.current_pos]
                     .iter()
-                    .collect::<String>()
+                    .collect::<String>();
+
+                let num = text
                     .parse::<f32>()
                     .unwrap();
-                Ok(Token::Number(TokenValue::Number(num)))
+
+                Ok(Token::new(TokenType::Number, text, Some(Literal::Number(num))))
             }
             '"' => {
                 self.next();
@@ -180,9 +183,11 @@ impl Lexer {
                     return Err(ConstantError::StringNotTerminated);
                 }
 
-                let tok = Token::String(TokenValue::String(
-                    self.source[start_pos..self.current_pos].iter().collect(),
-                ));
+                let text = self.source[start_pos..self.current_pos]
+                    .iter()
+                    .collect::<String>();
+                let tok = Token::new(TokenType::String, self.source[(start_pos-1)..=self.current_pos].iter().collect(), Some(Literal::String(text)));
+
                 self.next(); // consumes the ending "
 
                 Ok(tok)
@@ -201,7 +206,7 @@ impl Lexer {
                     Err(ConstantError::InvalidString(text, start_pos))
                 }
             }
-            '\0' => Ok(Token::EOF),
+            '\0' => Ok(Token::eof()),
             _ => Err(ConstantError::InvalidString(
                 format!("{}", self.current_char),
                 self.current_pos,
@@ -242,9 +247,9 @@ mod tests {
     fn lexer_next_token_number() -> Result<()> {
         let mut l = Lexer::new("123.456 123");
 
-        assert!(l.next_token()? == Token::Number(TokenValue::Number(123.456)));
-        assert!(l.next_token()? == Token::Number(TokenValue::Number(123.0)));
-        assert!(l.next_token()? == Token::EOF);
+        assert!(l.next_token()?.literal.unwrap() == Literal::Number(123.456));
+        assert!(l.next_token()?.literal.unwrap() == Literal::Number(123.0));
+        assert!(l.next_token()?.token_type == TokenType::EOF);
 
         Ok(())
     }
@@ -254,16 +259,14 @@ mod tests {
         let mut l = Lexer::new("\"this is a test string\" \"this is another test string\"");
 
         assert!(
-            l.next_token()?
-                == Token::String(TokenValue::String(String::from("this is a test string")))
+            l.next_token()?.literal.unwrap()
+                == Literal::String("this is a test string".into())
         );
         assert!(
-            l.next_token()?
-                == Token::String(TokenValue::String(String::from(
-                    "this is another test string"
-                )))
+            l.next_token()?.literal.unwrap()
+                == Literal::String("this is another test string".into())
         );
-        assert!(l.next_token()? == Token::EOF);
+        assert!(l.next_token()?.token_type == TokenType::EOF);
 
         Ok(())
     }
@@ -272,10 +275,10 @@ mod tests {
     fn lexer_next_token_bool() -> Result<()> {
         let mut l = Lexer::new("true false true");
 
-        assert!(l.next_token()? == Token::Bool(TokenValue::Bool(true)));
-        assert!(l.next_token()? == Token::Bool(TokenValue::Bool(false)));
-        assert!(l.next_token()? == Token::Bool(TokenValue::Bool(true)));
-        assert!(l.next_token()? == Token::EOF);
+        assert!(l.next_token()?.literal.unwrap() == Literal::Bool(true));
+        assert!(l.next_token()?.literal.unwrap() == Literal::Bool(false));
+        assert!(l.next_token()?.literal.unwrap() == Literal::Bool(true));
+        assert!(l.next_token()?.token_type == TokenType::EOF);
 
         Ok(())
     }
@@ -284,11 +287,11 @@ mod tests {
     fn lexer_next_token_built_in() -> Result<()> {
         let mut l = Lexer::new("print dup dup print");
 
-        assert!(l.next_token()? == Token::Print);
-        assert!(l.next_token()? == Token::Dup);
-        assert!(l.next_token()? == Token::Dup);
-        assert!(l.next_token()? == Token::Print);
-        assert!(l.next_token()? == Token::EOF);
+        assert!(l.next_token()?.token_type == TokenType::Print);
+        assert!(l.next_token()?.token_type == TokenType::Dup);
+        assert!(l.next_token()?.token_type == TokenType::Dup);
+        assert!(l.next_token()?.token_type == TokenType::Print);
+        assert!(l.next_token()?.token_type == TokenType::EOF);
 
         Ok(())
     }
@@ -297,7 +300,7 @@ mod tests {
     fn lexer_skip_comments() -> Result<()> {
         let mut l = Lexer::new("// this is a comment");
 
-        assert!(l.next_token()? == Token::EOF);
+        assert!(l.next_token()?.token_type == TokenType::EOF);
 
         Ok(())
     }

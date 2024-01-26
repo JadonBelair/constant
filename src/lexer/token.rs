@@ -5,8 +5,33 @@ use std::{
 
 use crate::error::ConstantError;
 
+#[derive(Clone, PartialEq, Debug)]
+pub struct Token {
+    pub token_type: TokenType,
+    pub lexeme: String,
+    pub literal: Option<Literal>,
+}
+
+impl Token {
+    pub fn new(token_type: TokenType, lexeme: String, literal: Option<Literal>) -> Self {
+        Self {
+            token_type,
+            lexeme,
+            literal,
+        }
+    }
+
+    pub fn eof() -> Self {
+        Self {
+            token_type: TokenType::EOF,
+            lexeme: "".into(),
+            literal: None,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
-pub enum Token {
+pub enum TokenType {
     // operations
     Plus,
     Minus,
@@ -20,9 +45,9 @@ pub enum Token {
     NotEq,
 
     // data types
-    Number(TokenValue),
-    String(TokenValue),
-    Bool(TokenValue),
+    Number,
+    String,
+    Bool,
 
     // built-ins
     Print,
@@ -34,13 +59,13 @@ pub enum Token {
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
-pub enum TokenValue {
+pub enum Literal {
     Number(f32),
     String(String),
     Bool(bool),
 }
 
-impl Display for TokenValue {
+impl Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Number(v) => f.write_fmt(format_args!("{v}")),
@@ -50,7 +75,7 @@ impl Display for TokenValue {
     }
 }
 
-impl Add<TokenValue> for TokenValue {
+impl Add<Literal> for Literal {
     type Output = Result<Self, ConstantError>;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -80,7 +105,7 @@ impl Add<TokenValue> for TokenValue {
     }
 }
 
-impl Sub<TokenValue> for TokenValue {
+impl Sub<Literal> for Literal {
     type Output = Result<Self, ConstantError>;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -104,7 +129,7 @@ impl Sub<TokenValue> for TokenValue {
     }
 }
 
-impl Mul<TokenValue> for TokenValue {
+impl Mul<Literal> for Literal {
     type Output = Result<Self, ConstantError>;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -134,7 +159,7 @@ impl Mul<TokenValue> for TokenValue {
     }
 }
 
-impl Div<TokenValue> for TokenValue {
+impl Div<Literal> for Literal {
     type Output = Result<Self, ConstantError>;
 
     fn div(self, rhs: Self) -> Self::Output {
