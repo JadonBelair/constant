@@ -30,8 +30,6 @@ pub enum Token {
     Swap,
     Drop,
 
-    Ident(String),
-
     EOF,
 }
 

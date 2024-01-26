@@ -118,7 +118,6 @@ impl Interpreter {
                     self.stack.push(TokenValue::Bool(operation(first, second)));
                 }
                 Token::Number(v) | Token::String(v) | Token::Bool(v) => self.stack.push(v.clone()),
-                Token::Ident(_) => {}
                 Token::Print => {
                     println!(
                         "{}",
