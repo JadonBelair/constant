@@ -1,4 +1,5 @@
 use thiserror::Error;
+use crate::lexer::TokenType;
 
 #[derive(Error, Debug)]
 pub enum ConstantError {
@@ -19,4 +20,7 @@ pub enum ConstantError {
 
     #[error("Invalid operation: {0}")]
     InvalidOperation(String),
+
+    #[error("Expected {1:?}, found {0:?}")]
+    NonMatchingToken(TokenType, TokenType),
 }
