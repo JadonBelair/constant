@@ -63,19 +63,32 @@ impl Interpreter {
                     let first = if let Some(val) = self.stack.pop() {
                         val
                     } else {
+                        // we restore the stack on a failed operation
+                        // doens't really matter for interpreted mode 
+                        // but it's a nice feature to have in the REPL
+                        self.stack.push(second);
                         return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
                     };
 
                     // find a way to combine with above that doesnt result in weird error about closures
-                    let result = match &self.current_token {
-                        Token::Plus => first + second,
-                        Token::Minus => first - second,
-                        Token::Asterisk => first * second,
-                        Token::Slash => first / second,
-                        _ => unreachable!(),
+                    let operation = |first: TokenValue, second: TokenValue| {
+                        match &self.current_token {
+                            Token::Plus => first + second,
+                            Token::Minus => first - second,
+                            Token::Asterisk => first * second,
+                            Token::Slash => first / second,
+                            _ => unreachable!(),
+                        }
                     };
 
-                    self.stack.push(result?);
+                    match operation(first.clone(), second.clone()) {
+                        Ok(v) => self.stack.push(v),
+                        Err(e) => {
+                            self.stack.push(first);
+                            self.stack.push(second);
+                            return Err(e);
+                        }
+                    }
                 }
                 Token::GT | Token::LT | Token::Eq | Token::GTEq | Token::LTEq | Token::NotEq => {
                     let second = if let Some(val) = self.stack.pop() {
@@ -89,22 +102,24 @@ impl Interpreter {
                     let first = if let Some(val) = self.stack.pop() {
                         val
                     } else {
+                        self.stack.push(second);
                         return Err(ConstantError::InvalidStackAmount(
                             String::from("Comparison"),
                             2,
                         ));
                     };
 
-                    let operation = match &self.current_token {
-                        Token::GT => |x: TokenValue, y: TokenValue| x > y,
-                        Token::LT => |x: TokenValue, y: TokenValue| x < y,
-                        Token::Eq => |x: TokenValue, y: TokenValue| x == y,
-                        Token::GTEq => |x: TokenValue, y: TokenValue| x >= y,
-                        Token::LTEq => |x: TokenValue, y: TokenValue| x <= y,
-                        Token::NotEq => |x: TokenValue, y: TokenValue| x != y,
-                        _ => unreachable!(),
+                    let operation = |x: TokenValue, y: TokenValue| {
+                        match &self.current_token {
+                            Token::GT => x > y,
+                            Token::LT => x < y,
+                            Token::Eq => x == y,
+                            Token::GTEq => x >= y,
+                            Token::LTEq => x <= y,
+                            Token::NotEq => x != y,
+                            _ => unreachable!(),
+                        }
                     };
-
                     self.stack.push(TokenValue::Bool(operation(first, second)));
                 }
                 Token::Number(v) | Token::String(v) | Token::Bool(v) => self.stack.push(v.clone()),
@@ -143,6 +158,7 @@ impl Interpreter {
                     let second = if let Some(val) = self.stack.pop() {
                         val
                     } else {
+                        self.stack.push(first);
                         return Err(ConstantError::InvalidStackAmount(
                             String::from("Swapping"),
                             2,
