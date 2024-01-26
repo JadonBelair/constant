@@ -5,7 +5,7 @@ pub use token::{Token, TokenValue};
 
 use crate::error::ConstantError;
 
-pub mod token;
+mod token;
 
 lazy_static! {
     static ref KEYWORDS: HashMap<String, Token> = {
