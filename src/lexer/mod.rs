@@ -28,16 +28,17 @@ pub struct Lexer {
 
 impl Lexer {
     pub fn new<'a>(source: &'a str) -> Self {
-        let mut l = Self {
-            source: source.chars().collect(),
-            current_char: '\0',
-            current_pos: 0,
-        };
-        if let Some(&c) = l.source.get(0) {
-            l.current_char = c;
+        let mut source = source.chars().collect::<Vec<char>>();
+        if source.last() != Some(&'\0') {
+            source.push('\0');
         }
+        let current_char = source[0];
 
-        l
+        Self {
+            source,
+            current_char,
+            current_pos: 0,
+        }
     }
 
     fn skip_whitespace(&mut self) -> bool {
@@ -64,13 +65,9 @@ impl Lexer {
     }
 
     fn next(&mut self) {
-        self.current_pos += 1.clamp(0, self.source.len());
-
-        if self.current_pos >= self.source.len() {
-            self.current_char = '\0';
-            self.current_pos = self.source.len();
-        } else {
-            self.current_char = self.source[self.current_pos];
+        if let Some(&c) = self.source.get(self.current_pos + 1) {
+            self.current_pos += 1;
+            self.current_char = c;
         }
     }
 

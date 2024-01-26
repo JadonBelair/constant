@@ -2,7 +2,7 @@ use std::io::Write;
 
 use crate::{
     error::ConstantError,
-    lexer::{Token, TokenValue, Lexer},
+    lexer::{Lexer, Token, TokenValue},
 };
 
 pub struct Interpreter {
@@ -14,34 +14,24 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new(tokens: Vec<Token>) -> Self {
-        let mut i = Self {
+        let mut tokens = tokens;
+        if tokens.last() != Some(&Token::EOF) {
+            tokens.push(Token::EOF);
+        }
+        let current_token = tokens[0].clone();
+
+        Self {
             stack: Vec::new(),
             tokens,
-            current_token: Token::EOF,
+            current_token,
             current_pos: 0,
-        };
-        i.initialize();
-
-        i
-    }
-
-    fn initialize(&mut self) {
-        self.current_pos = 0;
-        self.current_token = if let Some(tok) = self.tokens.get(0) {
-            tok.clone()
-        } else {
-            Token::EOF
         }
     }
 
     fn next(&mut self) {
-        self.current_pos += 1.clamp(0, self.tokens.len());
-
-        if self.current_pos >= self.tokens.len() {
-            self.current_token = Token::EOF;
-            self.current_pos = self.tokens.len();
-        } else {
-            self.current_token = self.tokens[self.current_pos].clone();
+        if let Some(t) = self.tokens.get(self.current_pos + 1) {
+            self.current_pos += 1;
+            self.current_token = t.clone();
         }
     }
 
@@ -183,10 +173,14 @@ impl Interpreter {
         println!("Welcome to the Constant REPL, type 'exit' or 'quit' to quit");
         loop {
             print!("> ");
-            std::io::stdout().flush().expect("Error: Could not flush stdout");
+            std::io::stdout()
+                .flush()
+                .expect("Error: Could not flush stdout");
 
             let mut code = String::new();
-            std::io::stdin().read_line(&mut code).expect("Error: Could not read input");
+            std::io::stdin()
+                .read_line(&mut code)
+                .expect("Error: Could not read input");
 
             if code.trim() == "exit" || code.trim() == "quit" {
                 return;
@@ -199,11 +193,11 @@ impl Interpreter {
                     continue;
                 }
             };
-            self.initialize();
+            self.current_pos = 0;
+            self.current_token = self.tokens[0].clone();
 
-            match self.interpret() {
-                Err(e) => println!("{e}"),
-                _ => ()
+            if let Err(e) = self.interpret() {
+                println!("{e}");
             }
         }
     }
