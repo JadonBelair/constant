@@ -21,7 +21,6 @@ fn main() -> Result<()> {
         };
 
         let tokens = Lexer::new(&file_contents).tokenize()?;
-        println!("{tokens:?}");
         Ok(Interpreter::new(tokens).interpret()?)
     } else {
         return Err(ConstantError::NoSourceFile.into());
