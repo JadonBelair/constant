@@ -1,28 +1,37 @@
+use std::io::Write;
+
 use crate::{
     error::ConstantError,
-    lexer::{Token, TokenValue},
+    lexer::{Token, TokenValue, Lexer},
 };
 
-pub struct Interpreter<'a> {
+pub struct Interpreter {
     stack: Vec<TokenValue>,
-    tokens: &'a Vec<Token>,
+    tokens: Vec<Token>,
     current_token: Token,
     current_pos: usize,
 }
 
-impl<'a> Interpreter<'a> {
-    pub fn new(tokens: &'a Vec<Token>) -> Self {
+impl Interpreter {
+    pub fn new(tokens: Vec<Token>) -> Self {
         let mut i = Self {
             stack: Vec::new(),
             tokens,
             current_token: Token::EOF,
             current_pos: 0,
         };
-        if let Some(tok) = i.tokens.get(0) {
-            i.current_token = tok.clone();
-        }
+        i.initialize();
 
         i
+    }
+
+    fn initialize(&mut self) {
+        self.current_pos = 0;
+        self.current_token = if let Some(tok) = self.tokens.get(0) {
+            tok.clone()
+        } else {
+            Token::EOF
+        }
     }
 
     fn next(&mut self) {
@@ -169,5 +178,34 @@ impl<'a> Interpreter<'a> {
         }
 
         Ok(())
+    }
+
+    pub fn repl(&mut self) {
+        println!("Welcome to the Constant REPL, type 'exit' or 'quit' to quit");
+        loop {
+            print!("> ");
+            std::io::stdout().flush().expect("Error: Could not flush stdout");
+
+            let mut code = String::new();
+            std::io::stdin().read_line(&mut code).expect("Error: Could not read input");
+
+            if code.trim() == "exit" || code.trim() == "quit" {
+                return;
+            }
+
+            match Lexer::new(&code).tokenize() {
+                Ok(tokens) => self.tokens = tokens,
+                Err(e) => {
+                    println!("{e}");
+                    continue;
+                }
+            };
+            self.initialize();
+
+            match self.interpret() {
+                Err(e) => println!("{e}"),
+                _ => ()
+            }
+        }
     }
 }
