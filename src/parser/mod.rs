@@ -104,24 +104,28 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Statement, ConstantError> {
-        let res = if let Some(o) = SINGLE_OPERATIONS.get(&self.current_token.token_type) {
+        if let Some(o) = SINGLE_OPERATIONS.get(&self.current_token.token_type) {
+            self.next();
             Ok(Statement::SingleOperation(*o))
         } else if let Some(o) = DOUBLE_OPERATIONS.get(&self.current_token.token_type) {
+            self.next();
             Ok(Statement::DoubleOperation(*o))
         } else if matches!(
             self.current_token.token_type,
             TokenType::Number | TokenType::Bool | TokenType::String
         ) {
-            Ok(Statement::Push(Value::Literal(
-                self.current_token.literal.clone().unwrap(),
-            )))
+            let val = self.current_token.literal.clone().unwrap();
+            self.next();
+            Ok(Statement::Push(Value::Literal(val)))
         } else if self.check_token(TokenType::Bind) {
             self.match_token(TokenType::Bind)?;
             let ident = self.match_token(TokenType::Ident)?;
             Ok(Statement::Bind(ident.lexeme))
         } else if self.check_token(TokenType::Ident) {
-            Ok(Statement::Push(Value::Ident(self.current_token.lexeme.clone())))
+            let tok = self.match_token(TokenType::Ident)?;
+            Ok(Statement::Push(Value::Ident(tok.lexeme.clone())))
         } else if self.current_token.token_type == TokenType::EOF {
+            self.next();
             Ok(Statement::Empty)
         } else {
             Err(ConstantError::NonMatchingToken(
@@ -137,8 +141,6 @@ impl Parser {
                 ]
                 .concat(),
             ))
-        };
-        self.next();
-        res
+        }
     }
 }

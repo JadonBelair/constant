@@ -1,0 +1,7 @@
+// Constant gives you the ability to bind the 
+// top value on the stack to a constant
+// NOTE: This consumes the value so if you want to keep it, dup first
+
+4 6 * bind x // binds 24 to x
+x x + bind y // binds 48 to y
+x y + print // prints 72
