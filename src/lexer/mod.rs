@@ -38,6 +38,14 @@ lazy_static! {
             String::from("bind"),
             Token::new(TokenType::Bind, "bind".into(), None),
         );
+        h.insert(
+            String::from("if"),
+            Token::new(TokenType::If, "if".into(), None),
+        );
+        h.insert(
+            String::from("endif"),
+            Token::new(TokenType::EndIf, "endif".into(), None),
+        );
         h
     };
 }

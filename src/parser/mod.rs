@@ -4,7 +4,7 @@ use crate::{
     error::ConstantError,
     lexer::{Token, TokenType},
 };
-pub use ast::{SingleOpType, DoubleOpType, Statement, Value};
+pub use ast::{DoubleOpType, SingleOpType, Statement, Value};
 use lazy_static::lazy_static;
 
 mod ast;
@@ -25,7 +25,6 @@ lazy_static! {
         h.insert(TokenType::Swap, DoubleOpType::Swap);
         h
     };
-
     static ref SINGLE_OPERATIONS: HashMap<TokenType, SingleOpType> = {
         let mut h = HashMap::new();
         h.insert(TokenType::Print, SingleOpType::Print);
@@ -112,6 +111,14 @@ impl Parser {
         } else if self.check_token(TokenType::Ident) {
             let tok = self.match_token(TokenType::Ident)?;
             Ok(Statement::Push(Value::Ident(tok.lexeme.clone())))
+        } else if self.check_token(TokenType::If) {
+            self.match_token(TokenType::If)?;
+            let mut statements = Vec::new();
+            while !self.check_token(TokenType::EndIf) {
+                statements.push(self.statement()?);
+            }
+            self.match_token(TokenType::EndIf)?;
+            Ok(Statement::If(statements))
         } else if self.current_token.token_type == TokenType::EOF {
             self.next();
             Ok(Statement::Empty)
@@ -119,14 +126,21 @@ impl Parser {
             Err(ConstantError::NonMatchingToken(
                 self.current_token.token_type,
                 vec![
-                    SINGLE_OPERATIONS.keys().map(|k| *k).collect::<Vec<TokenType>>(),
-                    DOUBLE_OPERATIONS.keys().map(|k| *k).collect::<Vec<TokenType>>(),
+                    SINGLE_OPERATIONS
+                        .keys()
+                        .map(|k| *k)
+                        .collect::<Vec<TokenType>>(),
+                    DOUBLE_OPERATIONS
+                        .keys()
+                        .map(|k| *k)
+                        .collect::<Vec<TokenType>>(),
                     vec![
                         TokenType::Number,
                         TokenType::Bool,
                         TokenType::String,
                         TokenType::Bind,
                         TokenType::Ident,
+                        TokenType::If,
                     ],
                 ]
                 .concat(),

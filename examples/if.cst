@@ -1,0 +1,6 @@
+// if statements allow you to only run
+// code if the top stack value is true
+
+10 5 > if
+"this statement is true" print
+endif

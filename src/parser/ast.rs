@@ -6,6 +6,7 @@ pub enum Statement {
     DoubleOperation(DoubleOpType),
     SingleOperation(SingleOpType),
     Bind(String),
+    If(Vec<Statement>),
     Empty,
 }
 

@@ -1,8 +1,9 @@
-use std::{io::Write, collections::HashMap};
+use std::{collections::HashMap, io::Write};
 
 use crate::{
     error::ConstantError,
-    lexer::{Lexer, Literal}, parser::{Statement, Value, SingleOpType, DoubleOpType, Parser},
+    lexer::{Lexer, Literal},
+    parser::{DoubleOpType, Parser, SingleOpType, Statement, Value},
 };
 
 pub struct Interpreter {
@@ -39,102 +40,121 @@ impl Interpreter {
 
     pub fn interpret(&mut self) -> Result<(), ConstantError> {
         while self.current_statement != Statement::Empty {
-            match &self.current_statement {
-                Statement::Push(Value::Literal(l)) => self.stack.push(l.clone()),
-                Statement::Push(Value::Ident(i)) => {
-                    if let Some(v) = self.idents.get(i) {
-                        self.stack.push(v.clone());
-                    } else {
-                        return Err(ConstantError::IdentDoesNotExist(i.into()));
-                    }
-                }
-                Statement::SingleOperation(o) => {
-                    let action = match o {
-                        SingleOpType::Print => "Printing",
-                        SingleOpType::Dup => "Duping",
-                        SingleOpType::Drop => "Dropping",
-                    };
-
-                    let val = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from(action), 1));
-                    };
-
-                    match o {
-                        SingleOpType::Print => println!("{val}"),
-                        SingleOpType::Dup => {
-                            self.stack.push(val.clone());
-                            self.stack.push(val);
-                        }
-                        SingleOpType::Drop => (),
-                    }
-                }
-                Statement::DoubleOperation(o) => {
-                    let action = match o {
-                        DoubleOpType::Add => "Addition",
-                        DoubleOpType::Sub => "Subtraction",
-                        DoubleOpType::Mul => "Multiplication",
-                        DoubleOpType::Div => "Division",
-                        DoubleOpType::Swap => "Swapping",
-                        _ => "Comparison",
-                    };
-
-                    let second = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
-                    };
-                    let first = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        // we restore the stack on a failed operation
-                        // doesn't really matter for interpreted mode
-                        // but it's a nice feature to have in the REPL
-                        self.stack.push(second);
-                        return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
-                    };
-
-                    if o == &DoubleOpType::Swap {
-                        self.stack.push(second.clone());
-                    }
-
-                    let res = match o {
-                        DoubleOpType::Add => first.clone() + second.clone(),
-                        DoubleOpType::Sub => first.clone() - second.clone(),
-                        DoubleOpType::Mul => first.clone() * second.clone(),
-                        DoubleOpType::Div => first.clone() / second.clone(),
-                        DoubleOpType::Swap => Ok(first.clone()),
-                        DoubleOpType::GT => Ok(Literal::Bool(first.clone() > second.clone())),
-                        DoubleOpType::GTEq => Ok(Literal::Bool(first.clone() >= second.clone())),
-                        DoubleOpType::LT => Ok(Literal::Bool(first.clone() < second.clone())),
-                        DoubleOpType::LTEq => Ok(Literal::Bool(first.clone() <= second.clone())),
-                        DoubleOpType::Eq => Ok(Literal::Bool(first.clone() == second.clone())),
-                        DoubleOpType::NotEq => Ok(Literal::Bool(first.clone() != second.clone())),
-                    };
-
-                    match res {
-                        Ok(v) => self.stack.push(v),
-                        Err(e) => {
-                            self.stack.push(first);
-                            self.stack.push(second);
-                            return Err(e);
-                        }
-                    }
-                }
-                Statement::Bind(ident) => {
-                    let val = if let Some(val) = self.stack.pop() {
-                        val
-                    } else {
-                        return Err(ConstantError::InvalidStackAmount("Binding".into(), 1))
-                    };
-
-                    self.idents.insert(ident.into(), val);
-                }
-                Statement::Empty => (),
-            }
-
+            self.interpret_statement(self.current_statement.clone())?;
             self.next();
+        }
+        Ok(())
+    }
+
+    fn interpret_statement(&mut self, statement: Statement) -> Result<(), ConstantError> {
+        match statement {
+            Statement::Push(Value::Literal(ref l)) => self.stack.push(l.clone()),
+            Statement::Push(Value::Ident(ref i)) => {
+                if let Some(v) = self.idents.get(i) {
+                    self.stack.push(v.clone());
+                } else {
+                    return Err(ConstantError::IdentDoesNotExist(i.into()));
+                }
+            }
+            Statement::SingleOperation(o) => {
+                let action = match o {
+                    SingleOpType::Print => "Printing",
+                    SingleOpType::Dup => "Duping",
+                    SingleOpType::Drop => "Dropping",
+                };
+
+                let val = if let Some(val) = self.stack.pop() {
+                    val
+                } else {
+                    return Err(ConstantError::InvalidStackAmount(String::from(action), 1));
+                };
+
+                match o {
+                    SingleOpType::Print => println!("{val}"),
+                    SingleOpType::Dup => {
+                        self.stack.push(val.clone());
+                        self.stack.push(val);
+                    }
+                    SingleOpType::Drop => (),
+                }
+            }
+            Statement::DoubleOperation(o) => {
+                let action = match o {
+                    DoubleOpType::Add => "Addition",
+                    DoubleOpType::Sub => "Subtraction",
+                    DoubleOpType::Mul => "Multiplication",
+                    DoubleOpType::Div => "Division",
+                    DoubleOpType::Swap => "Swapping",
+                    _ => "Comparison",
+                };
+
+                let second = if let Some(val) = self.stack.pop() {
+                    val
+                } else {
+                    return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
+                };
+                let first = if let Some(val) = self.stack.pop() {
+                    val
+                } else {
+                    // we restore the stack on a failed operation
+                    // doesn't really matter for interpreted mode
+                    // but it's a nice feature to have in the REPL
+                    self.stack.push(second);
+                    return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
+                };
+
+                if o == DoubleOpType::Swap {
+                    self.stack.push(second.clone());
+                }
+
+                let res = match o {
+                    DoubleOpType::Add => first.clone() + second.clone(),
+                    DoubleOpType::Sub => first.clone() - second.clone(),
+                    DoubleOpType::Mul => first.clone() * second.clone(),
+                    DoubleOpType::Div => first.clone() / second.clone(),
+                    DoubleOpType::Swap => Ok(first.clone()),
+                    DoubleOpType::GT => Ok(Literal::Bool(first.clone() > second.clone())),
+                    DoubleOpType::GTEq => Ok(Literal::Bool(first.clone() >= second.clone())),
+                    DoubleOpType::LT => Ok(Literal::Bool(first.clone() < second.clone())),
+                    DoubleOpType::LTEq => Ok(Literal::Bool(first.clone() <= second.clone())),
+                    DoubleOpType::Eq => Ok(Literal::Bool(first.clone() == second.clone())),
+                    DoubleOpType::NotEq => Ok(Literal::Bool(first.clone() != second.clone())),
+                };
+
+                match res {
+                    Ok(v) => self.stack.push(v),
+                    Err(e) => {
+                        self.stack.push(first);
+                        self.stack.push(second);
+                        return Err(e);
+                    }
+                }
+            }
+            Statement::Bind(ref ident) => {
+                let val = if let Some(val) = self.stack.pop() {
+                    val
+                } else {
+                    return Err(ConstantError::InvalidStackAmount("Binding".into(), 1));
+                };
+
+                self.idents.insert(ident.into(), val);
+            }
+            Statement::If(ref statements) => {
+                let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
+                    b
+                } else {
+                    return Err(ConstantError::InvalidOperation(
+                        "If statement expects boolean value on top of stack".into(),
+                    ));
+                };
+
+                if val {
+                    for statement in statements {
+                        self.interpret_statement(statement.clone())?;
+                    }
+                }
+            }
+            Statement::Empty => (),
         }
 
         Ok(())
@@ -171,7 +191,7 @@ impl Interpreter {
                     continue;
                 }
             };
-            
+
             self.program = ast;
             self.current_statement = self.program[0].clone();
             self.current_pos = 0;

@@ -55,6 +55,8 @@ pub enum TokenType {
     Swap,
     Drop,
     Bind,
+    If,
+    EndIf,
 
     Ident,
 
