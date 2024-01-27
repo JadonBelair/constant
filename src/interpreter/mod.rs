@@ -96,7 +96,7 @@ impl Interpreter {
                     };
 
                     if o == &DoubleOpType::Swap {
-                        self.stack.push(first.clone());
+                        self.stack.push(second.clone());
                     }
 
                     let res = match o {
@@ -104,7 +104,7 @@ impl Interpreter {
                         DoubleOpType::Sub => first.clone() - second.clone(),
                         DoubleOpType::Mul => first.clone() * second.clone(),
                         DoubleOpType::Div => first.clone() / second.clone(),
-                        DoubleOpType::Swap => Ok(second.clone()),
+                        DoubleOpType::Swap => Ok(first.clone()),
                         DoubleOpType::GT => Ok(Literal::Bool(first.clone() > second.clone())),
                         DoubleOpType::GTEq => Ok(Literal::Bool(first.clone() >= second.clone())),
                         DoubleOpType::LT => Ok(Literal::Bool(first.clone() < second.clone())),
