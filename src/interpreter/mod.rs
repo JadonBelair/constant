@@ -80,7 +80,7 @@ impl Interpreter {
                         val
                     } else {
                         // we restore the stack on a failed operation
-                        // doens't really matter for interpreted mode
+                        // doesn't really matter for interpreted mode
                         // but it's a nice feature to have in the REPL
                         self.stack.push(second);
                         return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
