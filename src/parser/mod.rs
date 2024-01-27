@@ -63,14 +63,6 @@ impl Parser {
         }
     }
 
-    #[allow(unused)] // get rid of compiler warnings until we need to use this
-    fn peek(&self) -> Token {
-        self.tokens
-            .get(self.current_pos + 1)
-            .unwrap_or(&Token::eof())
-            .clone()
-    }
-
     fn check_token(&self, token: TokenType) -> bool {
         self.current_token.token_type == token
     }
@@ -88,14 +80,10 @@ impl Parser {
         }
     }
 
-    fn is_at_end(&self) -> bool {
-        self.current_pos >= self.tokens.len() - 1
-    }
-
     pub fn parse(&mut self) -> Result<Vec<Statement>, ConstantError> {
         let mut ast = Vec::new();
 
-        while self.current_token != Token::eof() {
+        while !self.check_token(TokenType::EOF) {
             ast.push(self.statement()?);
         }
         ast.push(Statement::Empty);
