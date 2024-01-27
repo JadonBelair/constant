@@ -90,21 +90,28 @@ impl Interpreter {
                         self.stack.push(first.clone());
                     }
 
-                    self.stack.push(
-                        match o {
-                            DoubleOpType::Add => first + second,
-                            DoubleOpType::Sub => first - second,
-                            DoubleOpType::Mul => first * second,
-                            DoubleOpType::Div => first / second,
-                            DoubleOpType::Swap => Ok(second),
-                            DoubleOpType::GT => Ok(Literal::Bool(first > second)),
-                            DoubleOpType::GTEq => Ok(Literal::Bool(first >= second)),
-                            DoubleOpType::LT => Ok(Literal::Bool(first < second)),
-                            DoubleOpType::LTEq => Ok(Literal::Bool(first <= second)),
-                            DoubleOpType::Eq => Ok(Literal::Bool(first == second)),
-                            DoubleOpType::NotEq => Ok(Literal::Bool(first != second)),
-                        }?
-                    );
+                    let res = match o {
+                        DoubleOpType::Add => first.clone() + second.clone(),
+                        DoubleOpType::Sub => first.clone() - second.clone(),
+                        DoubleOpType::Mul => first.clone() * second.clone(),
+                        DoubleOpType::Div => first.clone() / second.clone(),
+                        DoubleOpType::Swap => Ok(second.clone()),
+                        DoubleOpType::GT => Ok(Literal::Bool(first.clone() > second.clone())),
+                        DoubleOpType::GTEq => Ok(Literal::Bool(first.clone() >= second.clone())),
+                        DoubleOpType::LT => Ok(Literal::Bool(first.clone() < second.clone())),
+                        DoubleOpType::LTEq => Ok(Literal::Bool(first.clone() <= second.clone())),
+                        DoubleOpType::Eq => Ok(Literal::Bool(first.clone() == second.clone())),
+                        DoubleOpType::NotEq => Ok(Literal::Bool(first.clone() != second.clone())),
+                    };
+
+                    match res {
+                        Ok(v) => self.stack.push(v),
+                        Err(e) => {
+                            self.stack.push(first);
+                            self.stack.push(second);
+                            return Err(e);
+                        }
+                    }
                 }
                 Statement::Empty => (),
             }
