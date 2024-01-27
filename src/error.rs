@@ -9,6 +9,9 @@ pub enum ConstantError {
     #[error("Could not find provided source file '{0}'")]
     SourceFileNotFound(String),
 
+    #[error("Too many arguments, either pass the sourse file or run with no arguments for REPL mode")]
+    TooManyArgs,
+
     #[error("String is not terminated before end of file")]
     StringNotTerminated,
 

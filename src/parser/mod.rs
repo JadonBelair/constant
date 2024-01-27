@@ -137,6 +137,8 @@ impl Parser {
                         TokenType::Number,
                         TokenType::Bool,
                         TokenType::String,
+                        TokenType::Bind,
+                        TokenType::Ident,
                     ],
                 ]
                 .concat(),

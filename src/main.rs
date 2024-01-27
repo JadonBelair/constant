@@ -24,6 +24,8 @@ fn main() -> Result<()> {
         let tokens = Lexer::new(&file_contents).tokenize()?;
         let ast = Parser::new(tokens).parse()?;
         Ok(Interpreter::new(ast).interpret()?)
+    } else if args.len() > 2 {
+        return Err(ConstantError::TooManyArgs.into());
     } else {
         return Err(ConstantError::NoSourceFile.into());
     }
