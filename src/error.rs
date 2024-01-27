@@ -23,4 +23,7 @@ pub enum ConstantError {
 
     #[error("Expected one of {1:?}, found {0:?}")]
     NonMatchingToken(TokenType, Vec<TokenType>),
+
+    #[error("Identifier '{0}' does not exist")]
+    IdentDoesNotExist(String),
 }

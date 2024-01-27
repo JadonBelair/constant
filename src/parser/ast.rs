@@ -5,6 +5,7 @@ pub enum Statement {
     Push(Value),
     DoubleOperation(DoubleOpType),
     SingleOperation(SingleOpType),
+    Bind(String),
     Empty,
 }
 
@@ -33,4 +34,5 @@ pub enum SingleOpType {
 #[derive(PartialEq, Clone, Debug)]
 pub enum Value {
     Literal(Literal),
+    Ident(String),
 }

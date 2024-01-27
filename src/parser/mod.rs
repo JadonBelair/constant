@@ -77,8 +77,9 @@ impl Parser {
 
     fn match_token(&mut self, token: TokenType) -> Result<Token, ConstantError> {
         if self.check_token(token.clone()) {
+            let tok = self.current_token.clone();
             self.next();
-            Ok(self.current_token.clone())
+            Ok(tok)
         } else {
             Err(ConstantError::NonMatchingToken(
                 self.current_token.token_type,
@@ -114,6 +115,12 @@ impl Parser {
             Ok(Statement::Push(Value::Literal(
                 self.current_token.literal.clone().unwrap(),
             )))
+        } else if self.check_token(TokenType::Bind) {
+            self.match_token(TokenType::Bind)?;
+            let ident = self.match_token(TokenType::Ident)?;
+            Ok(Statement::Bind(ident.lexeme))
+        } else if self.check_token(TokenType::Ident) {
+            Ok(Statement::Push(Value::Ident(self.current_token.lexeme.clone())))
         } else if self.current_token.token_type == TokenType::EOF {
             Ok(Statement::Empty)
         } else {

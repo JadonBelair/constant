@@ -34,6 +34,10 @@ lazy_static! {
             String::from("drop"),
             Token::new(TokenType::Drop, "drop".into(), None),
         );
+        h.insert(
+            String::from("bind"),
+            Token::new(TokenType::Bind, "bind".into(), None),
+        );
         h
     };
 }
@@ -229,7 +233,7 @@ impl Lexer {
                 if let Some(k) = KEYWORDS.get(&text) {
                     Ok(k.clone())
                 } else {
-                    Err(ConstantError::InvalidString(text, start_pos))
+                    Ok(Token::new(TokenType::Ident, text, None))
                 }
             }
             '\0' => Ok(Token::eof()),

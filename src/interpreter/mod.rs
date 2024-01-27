@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, collections::HashMap};
 
 use crate::{
     error::ConstantError,
@@ -8,6 +8,7 @@ use crate::{
 pub struct Interpreter {
     stack: Vec<Literal>,
     program: Vec<Statement>,
+    idents: HashMap<String, Literal>,
     current_statement: Statement,
     current_pos: usize,
 }
@@ -23,6 +24,7 @@ impl Interpreter {
         Self {
             stack: Vec::new(),
             program,
+            idents: HashMap::new(),
             current_statement,
             current_pos: 0,
         }
@@ -39,6 +41,13 @@ impl Interpreter {
         while self.current_statement != Statement::Empty {
             match &self.current_statement {
                 Statement::Push(Value::Literal(l)) => self.stack.push(l.clone()),
+                Statement::Push(Value::Ident(i)) => {
+                    if let Some(v) = self.idents.get(i) {
+                        self.stack.push(v.clone());
+                    } else {
+                        return Err(ConstantError::IdentDoesNotExist(i.into()));
+                    }
+                }
                 Statement::SingleOperation(o) => {
                     let action = match o {
                         SingleOpType::Print => "Printing",
@@ -112,6 +121,15 @@ impl Interpreter {
                             return Err(e);
                         }
                     }
+                }
+                Statement::Bind(ident) => {
+                    let val = if let Some(val) = self.stack.pop() {
+                        val
+                    } else {
+                        return Err(ConstantError::InvalidStackAmount("Binding".into(), 1))
+                    };
+
+                    self.idents.insert(ident.into(), val);
                 }
                 Statement::Empty => (),
             }
