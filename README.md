@@ -19,4 +19,8 @@ print //prints the top stack value
 dup // duplicates the item on the top of the stack
 swap // swaps the top 2 items on the stack
 drop // removes the top item from the stack
+
+// variables
+bind x // consumes and binds the top value on stack to x
+x // pushes the value bound to x to the stack, x does not change
 ```
