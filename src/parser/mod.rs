@@ -37,6 +37,7 @@ lazy_static! {
 pub struct Parser {
     tokens: Vec<Token>,
     current_token: Token,
+    previous_token: Token,
     current_pos: usize,
 }
 
@@ -50,7 +51,8 @@ impl Parser {
 
         Self {
             tokens,
-            current_token,
+            current_token: current_token.clone(),
+            previous_token: current_token,
             current_pos: 0,
         }
     }
@@ -58,6 +60,7 @@ impl Parser {
     fn next(&mut self) {
         if let Some(t) = self.tokens.get(self.current_pos + 1) {
             self.current_pos += 1;
+            self.previous_token = self.current_token.clone();
             self.current_token = t.clone();
         }
     }
@@ -114,14 +117,31 @@ impl Parser {
         } else if self.check_token(TokenType::If) {
             self.match_token(TokenType::If)?;
             let mut statements = Vec::new();
-            while !self.check_token(TokenType::EndIf) {
-                statements.push(self.statement()?);
+            while !self.check_token(TokenType::EndIf) && !self.check_token(TokenType::Else) {
+                match self.statement() {
+                    Ok(statement) => statements.push(statement),
+                    Err(_) if self.current_token.token_type == TokenType::EOF => return Err(ConstantError::NonMatchingToken(TokenType::EOF, vec![TokenType::EndIf])),
+                    Err(e) => return Err(e)
+                }
             }
-            self.match_token(TokenType::EndIf)?;
-            Ok(Statement::If(statements))
-        } else if self.current_token.token_type == TokenType::EOF {
-            self.next();
-            Ok(Statement::Empty)
+            let else_statements = if self.check_token(TokenType::Else) {
+                self.next();
+                let mut s = Vec::new();
+                while !self.check_token(TokenType::EndIf) {
+                    s.push(self.statement()?);
+                    if self.previous_token.token_type == TokenType::EndIf {
+                        break;
+                    }
+                }
+                if self.previous_token.token_type != TokenType::EndIf {
+                    self.next();
+                }
+                Some(s)
+            } else {
+                self.next();
+                None
+            };
+            Ok(Statement::If(statements, else_statements))
         } else {
             Err(ConstantError::NonMatchingToken(
                 self.current_token.token_type,

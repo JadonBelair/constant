@@ -31,17 +31,9 @@ impl Interpreter {
         }
     }
 
-    fn next(&mut self) {
-        if let Some(t) = self.program.get(self.current_pos + 1) {
-            self.current_pos += 1;
-            self.current_statement = t.clone();
-        }
-    }
-
     pub fn interpret(&mut self) -> Result<(), ConstantError> {
-        while self.current_statement != Statement::Empty {
-            self.interpret_statement(self.current_statement.clone())?;
-            self.next();
+        for statement in self.program.clone() {
+            self.interpret_statement(statement)?;
         }
         Ok(())
     }
@@ -139,7 +131,7 @@ impl Interpreter {
 
                 self.idents.insert(ident.into(), val);
             }
-            Statement::If(ref statements) => {
+            Statement::If(ref statements, ref else_statements) => {
                 let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
                     b
                 } else {
@@ -150,6 +142,10 @@ impl Interpreter {
 
                 if val {
                     for statement in statements {
+                        self.interpret_statement(statement.clone())?;
+                    }
+                } else if let Some(else_statements) = else_statements {
+                    for statement in else_statements {
                         self.interpret_statement(statement.clone())?;
                     }
                 }

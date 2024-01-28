@@ -56,6 +56,7 @@ pub enum TokenType {
     Drop,
     Bind,
     If,
+    Else,
     EndIf,
 
     Ident,
