@@ -21,9 +21,17 @@ swap // swaps the top 2 items on the stack
 drop // removes the top item from the stack
 
 // if statements
-15 10 > if // if checks if the top stack item is true
+if 10 < 20 do // if checks if the top stack item is true
 "this is true" print // these statements only run when the if is true
 endif
+
+// while statements
+0 bind x
+while x 20 < do // while loops only run while these statements evaluate to true
+    x print
+    x 1 +
+    bind x
+endwhile
 
 // variables
 bind x // consumes and binds the top value on stack to x
