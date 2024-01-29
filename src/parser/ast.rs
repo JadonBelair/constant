@@ -6,7 +6,12 @@ pub enum Statement {
     DoubleOperation(DoubleOpType),
     SingleOperation(SingleOpType),
     Bind(String),
-    If(Vec<Statement>, Vec<Statement>, Option<Vec<(Vec<Statement>, Vec<Statement>)>>, Option<Vec<Statement>>),
+    If(
+        Vec<Statement>,
+        Vec<Statement>,
+        Vec<(Vec<Statement>, Vec<Statement>)>,
+        Vec<Statement>,
+    ),
     While(Vec<Statement>, Vec<Statement>),
     Empty,
 }
