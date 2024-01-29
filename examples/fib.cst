@@ -1,0 +1,14 @@
+25 bind max
+0 bind x
+
+"the first 25 fibonacci numbers:" print
+
+0 bind f1
+1 bind f2
+while x max < do
+	f1 print
+	f1 f2 + bind temp
+	f2 bind f1
+	temp bind f2
+	x 1 + bind x
+endwhile
