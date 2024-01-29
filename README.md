@@ -2,7 +2,7 @@
 Constant is a very simple concatinative, stack-based programming language using [reverse polish notation](https://en.wikipedia.org/wiki/Reverse_Polish_notation)
 
 ## How to use
-run the program passing in a file path to the source code, if not file is provided, a REPL will be started instead
+run the program passing in a file path to the source code, if no file is provided, a REPL will be started instead
 
 ## Language features
 
