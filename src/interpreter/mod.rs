@@ -150,6 +150,28 @@ impl Interpreter {
                     }
                 }
             }
+            Statement::While(ref conditions, ref statements) => {
+                loop {
+                    for statement in conditions {
+                        self.interpret_statement(statement.clone())?;
+                    }
+                    let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
+                        b
+                    } else {
+                        return Err(ConstantError::InvalidOperation(
+                                "While statement expects boolean value on top of stack".into(),
+                        ));
+                    };
+
+                    if val {
+                        for statement in statements {
+                            self.interpret_statement(statement.clone())?;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
             Statement::Empty => (),
         }
 

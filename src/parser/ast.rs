@@ -7,6 +7,7 @@ pub enum Statement {
     SingleOperation(SingleOpType),
     Bind(String),
     If(Vec<Statement>, Option<Vec<Statement>>),
+    While(Vec<Statement>, Vec<Statement>),
     Empty,
 }
 

@@ -1,0 +1,10 @@
+// while loops will run while 
+// the top stack value is true
+
+0 bind x
+
+while x 100 < do
+	x print
+	x 1 +
+	bind x
+endwhile
