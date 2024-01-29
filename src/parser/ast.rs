@@ -22,6 +22,7 @@ pub enum DoubleOpType {
     Sub,
     Mul,
     Div,
+    Mod,
     GT,
     GTEq,
     LT,

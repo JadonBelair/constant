@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Add, Div, Mul, Sub},
+    ops::{Add, Div, Mul, Sub, Rem},
 };
 
 use crate::error::ConstantError;
@@ -37,6 +37,7 @@ pub enum TokenType {
     Minus,
     Asterisk,
     Slash,
+    Percent,
     GT,
     LT,
     Eq,
@@ -188,6 +189,30 @@ impl Div<Literal> for Literal {
             ))),
             Self::String(_) => Err(ConstantError::InvalidOperation(String::from(
                 "Cannot divide with strings",
+            ))),
+        }
+    }
+}
+
+impl Rem<Literal> for Literal {
+    type Output = Result<Self, ConstantError>;
+
+    fn rem(self, rhs: Self) -> Self::Output {
+        match self {
+            Self::Number(n) => {
+                if let Self::Number(m) = rhs {
+                    Ok(Self::Number(n % m))
+                } else {
+                    Err(ConstantError::InvalidOperation(String::from(
+                        "Can only mod numbers with numbers"
+                    )))
+                }
+            }
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot mod with booleans",
+            ))),
+            Self::String(_) => Err(ConstantError::InvalidOperation(String::from(
+                "Cannot mod with strings",
             ))),
         }
     }

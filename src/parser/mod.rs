@@ -23,6 +23,7 @@ lazy_static! {
         h.insert(TokenType::Eq, DoubleOpType::Eq);
         h.insert(TokenType::NotEq, DoubleOpType::NotEq);
         h.insert(TokenType::Swap, DoubleOpType::Swap);
+        h.insert(TokenType::Percent, DoubleOpType::Mod);
         h
     };
     static ref SINGLE_OPERATIONS: HashMap<TokenType, SingleOpType> = {

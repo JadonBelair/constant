@@ -77,6 +77,7 @@ impl Interpreter {
                     DoubleOpType::Mul => "Multiplication",
                     DoubleOpType::Div => "Division",
                     DoubleOpType::Swap => "Swapping",
+                    DoubleOpType::Mod => "Modulo",
                     _ => "Comparison",
                 };
 
@@ -104,6 +105,7 @@ impl Interpreter {
                     DoubleOpType::Sub => first.clone() - second.clone(),
                     DoubleOpType::Mul => first.clone() * second.clone(),
                     DoubleOpType::Div => first.clone() / second.clone(),
+                    DoubleOpType::Mod => first.clone() % second.clone(),
                     DoubleOpType::Swap => Ok(first.clone()),
                     DoubleOpType::GT => Ok(Literal::Bool(first.clone() > second.clone())),
                     DoubleOpType::GTEq => Ok(Literal::Bool(first.clone() >= second.clone())),

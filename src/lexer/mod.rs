@@ -145,6 +145,10 @@ impl Lexer {
                 self.next();
                 Ok(Token::new(TokenType::Slash, '/'.into(), None))
             }
+            '%' => {
+                self.next();
+                Ok(Token::new(TokenType::Percent, '%'.into(), None))
+            }
             '>' => {
                 self.next();
                 Ok(if self.current_char == '=' {

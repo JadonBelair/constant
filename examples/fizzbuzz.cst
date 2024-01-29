@@ -1,0 +1,15 @@
+// this program outputs the first 100 FizzBuzz numbers
+
+1 bind x
+while x 100 < do
+	if x 15 % 0 == do
+		"Fizz Buzz" print
+	elif x 3 % 0 == do
+		"Fizz" print
+	elif x 5 % 0 == do
+		"Buzz" print
+	else do
+		x print
+	endif
+	x 1 + bind x
+endwhile
