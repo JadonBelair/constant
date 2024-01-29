@@ -28,7 +28,7 @@ elif x 15 > do
     "now this is true" print
 else do
     "non were true" print
-endif
+end
 
 // while statements
 0 bind x
@@ -36,7 +36,7 @@ while x 20 < do // while loops only run while these statements evaluate to true
     x print
     x 1 +
     bind x
-endwhile
+end
 
 // variables
 bind x // consumes and binds the top value on stack to x
