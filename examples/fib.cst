@@ -11,4 +11,4 @@ while x max < do
 	f2 bind f1
 	temp bind f2
 	x 1 + bind x
-endwhile
+end

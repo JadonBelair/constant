@@ -59,10 +59,9 @@ pub enum TokenType {
     If,
     Elif,
     Else,
-    EndIf,
     While,
     Do,
-    EndWhile,
+    End,
 
     Ident,
 

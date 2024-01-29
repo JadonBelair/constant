@@ -51,10 +51,6 @@ lazy_static! {
             Token::new(TokenType::Else, "else".into(), None),
         );
         h.insert(
-            String::from("endif"),
-            Token::new(TokenType::EndIf, "endif".into(), None),
-        );
-        h.insert(
             String::from("while"),
             Token::new(TokenType::While, "while".into(), None),
         );
@@ -63,8 +59,8 @@ lazy_static! {
             Token::new(TokenType::Do, "do".into(), None),
         );
         h.insert(
-            String::from("endwhile"),
-            Token::new(TokenType::EndWhile, "endwhile".into(), None),
+            String::from("end"),
+            Token::new(TokenType::End, "end".into(), None),
         );
         h
     };

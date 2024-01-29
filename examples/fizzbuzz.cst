@@ -10,6 +10,6 @@ while x 100 < do
 		"Buzz" print
 	else do
 		x print
-	endif
+	end
 	x 1 + bind x
-endwhile
+end

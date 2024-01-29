@@ -120,7 +120,7 @@ impl Parser {
             let (conditions, statements) = self.if_block()?;
 
             let mut elifs = Vec::new();
-            while !self.check_token(TokenType::Else) && !self.check_token(TokenType::EndIf) {
+            while !self.check_token(TokenType::Else) && !self.check_token(TokenType::End) {
                 self.match_token(TokenType::Elif)?;
                 elifs.push(self.if_block()?);
             }
@@ -130,9 +130,9 @@ impl Parser {
                 self.match_token(TokenType::Else)?;
                 self.match_token(TokenType::Do)?;
 
-                else_statements = self.get_statements_till(vec![TokenType::EndIf])?;
+                else_statements = self.get_statements_till(vec![TokenType::End])?;
             }
-            self.match_token(TokenType::EndIf)?;
+            self.match_token(TokenType::End)?;
 
             Ok(Statement::If(
                 conditions,
@@ -146,8 +146,8 @@ impl Parser {
 
             self.match_token(TokenType::Do)?;
 
-            let statements = self.get_statements_till(vec![TokenType::EndWhile])?;
-            self.match_token(TokenType::EndWhile)?;
+            let statements = self.get_statements_till(vec![TokenType::End])?;
+            self.match_token(TokenType::End)?;
 
             Ok(Statement::While(conditions, statements))
         } else {
@@ -185,7 +185,7 @@ impl Parser {
         self.match_token(TokenType::Do)?;
 
         let statements =
-            self.get_statements_till(vec![TokenType::Elif, TokenType::Else, TokenType::EndIf])?;
+            self.get_statements_till(vec![TokenType::Elif, TokenType::Else, TokenType::End])?;
 
         Ok((conditions, statements))
     }
