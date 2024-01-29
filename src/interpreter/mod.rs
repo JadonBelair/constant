@@ -172,11 +172,11 @@ impl Interpreter {
                             }
                         }
 
-                        if do_else {
-                            if let Some(else_statements) = else_statements {
-                                for else_statement in else_statements {
-                                    self.interpret_statement(else_statement.clone())?;
-                                }
+                    }
+                    if do_else {
+                        if let Some(else_statements) = else_statements {
+                            for else_statement in else_statements {
+                                self.interpret_statement(else_statement.clone())?;
                             }
                         }
                     }
