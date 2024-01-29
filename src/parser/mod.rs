@@ -38,7 +38,6 @@ lazy_static! {
 pub struct Parser {
     tokens: Vec<Token>,
     current_token: Token,
-    previous_token: Token,
     current_pos: usize,
 }
 
@@ -52,8 +51,7 @@ impl Parser {
 
         Self {
             tokens,
-            current_token: current_token.clone(),
-            previous_token: current_token,
+            current_token,
             current_pos: 0,
         }
     }
@@ -61,7 +59,6 @@ impl Parser {
     fn next(&mut self) {
         if let Some(t) = self.tokens.get(self.current_pos + 1) {
             self.current_pos += 1;
-            self.previous_token = self.current_token.clone();
             self.current_token = t.clone();
         }
     }
@@ -198,10 +195,7 @@ impl Parser {
         while !tokens.contains(&self.current_token.token_type) {
             match self.statement() {
                 Ok(statement) => statements.push(statement),
-                Err(_) if self.check_token(TokenType::EOF) => {
-                    return Err(ConstantError::NonMatchingToken(TokenType::EOF, tokens))
-                }
-                Err(e) => return Err(e),
+                Err(_) => return Err(ConstantError::NonMatchingToken(TokenType::EOF, tokens)),
             }
         }
 

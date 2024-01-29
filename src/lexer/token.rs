@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Add, Div, Mul, Sub, Rem},
+    ops::{Add, Div, Mul, Rem, Sub},
 };
 
 use crate::error::ConstantError;
@@ -203,7 +203,7 @@ impl Rem<Literal> for Literal {
                     Ok(Self::Number(n % m))
                 } else {
                     Err(ConstantError::InvalidOperation(String::from(
-                        "Can only mod numbers with numbers"
+                        "Can only mod numbers with numbers",
                     )))
                 }
             }
