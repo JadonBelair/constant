@@ -116,12 +116,31 @@ impl Parser {
             Ok(Statement::Push(Value::Ident(tok.lexeme.clone())))
         } else if self.check_token(TokenType::If) {
             self.match_token(TokenType::If)?;
+            let mut conditions = Vec::new();
+            while !self.check_token(TokenType::Do) {
+                match self.statement() {
+                    Ok(statement) => conditions.push(statement),
+                    Err(_) if self.check_token(TokenType::EOF) => {
+                        return Err(ConstantError::NonMatchingToken(
+                            TokenType::EOF,
+                            vec![TokenType::Do],
+                        ))
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
+            self.match_token(TokenType::Do)?;
             let mut statements = Vec::new();
             while !self.check_token(TokenType::EndIf) && !self.check_token(TokenType::Else) {
                 match self.statement() {
                     Ok(statement) => statements.push(statement),
-                    Err(_) if self.check_token(TokenType::EOF) => return Err(ConstantError::NonMatchingToken(TokenType::EOF, vec![TokenType::EndIf])),
-                    Err(e) => return Err(e)
+                    Err(_) if self.check_token(TokenType::EOF) => {
+                        return Err(ConstantError::NonMatchingToken(
+                            TokenType::EOF,
+                            vec![TokenType::EndIf],
+                        ))
+                    }
+                    Err(e) => return Err(e),
                 }
             }
             let else_statements = if self.check_token(TokenType::Else) {
@@ -141,15 +160,20 @@ impl Parser {
                 self.next();
                 None
             };
-            Ok(Statement::If(statements, else_statements))
+            Ok(Statement::If(conditions, statements, else_statements))
         } else if self.check_token(TokenType::While) {
             self.match_token(TokenType::While)?;
             let mut conditions = Vec::new();
             while !self.check_token(TokenType::Do) {
                 match self.statement() {
                     Ok(statement) => conditions.push(statement),
-                    Err(_) if self.check_token(TokenType::EOF) => return Err(ConstantError::NonMatchingToken(TokenType::EOF, vec![TokenType::Do])),
-                    Err(e) => return Err(e)
+                    Err(_) if self.check_token(TokenType::EOF) => {
+                        return Err(ConstantError::NonMatchingToken(
+                            TokenType::EOF,
+                            vec![TokenType::Do],
+                        ))
+                    }
+                    Err(e) => return Err(e),
                 }
             }
             self.match_token(TokenType::Do)?;
@@ -157,8 +181,13 @@ impl Parser {
             while !self.check_token(TokenType::EndWhile) {
                 match self.statement() {
                     Ok(statement) => statements.push(statement),
-                    Err(_) if self.check_token(TokenType::EOF) => return Err(ConstantError::NonMatchingToken(TokenType::EOF, vec![TokenType::EndWhile])),
-                    Err(e) => return Err(e)
+                    Err(_) if self.check_token(TokenType::EOF) => {
+                        return Err(ConstantError::NonMatchingToken(
+                            TokenType::EOF,
+                            vec![TokenType::EndWhile],
+                        ))
+                    }
+                    Err(e) => return Err(e),
                 }
             }
             self.match_token(TokenType::EndWhile)?;

@@ -1,11 +1,13 @@
 // if statements allow you to only run
 // code if the top stack value is true
 
-10 bind age
+17 bind age
 
-age 20 >= if
-	"you are at least 20" print
-else age 15 >= if
+if age 50 >= do
+	"you are older than 50" print
+else if age 20 >= do
+	"you are between 20 and 50" print
+else if age 15 >= do
 	"you are between 15 and 20 years old" print
 else
 	"you are under 15" print

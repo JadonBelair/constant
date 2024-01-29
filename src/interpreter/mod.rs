@@ -131,7 +131,11 @@ impl Interpreter {
 
                 self.idents.insert(ident.into(), val);
             }
-            Statement::If(ref statements, ref else_statements) => {
+            Statement::If(ref conditions, ref statements, ref else_statements) => {
+                for statement in conditions {
+                    self.interpret_statement(statement.clone())?;
+                }
+
                 let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
                     b
                 } else {
@@ -150,28 +154,26 @@ impl Interpreter {
                     }
                 }
             }
-            Statement::While(ref conditions, ref statements) => {
-                loop {
-                    for statement in conditions {
+            Statement::While(ref conditions, ref statements) => loop {
+                for statement in conditions {
+                    self.interpret_statement(statement.clone())?;
+                }
+                let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
+                    b
+                } else {
+                    return Err(ConstantError::InvalidOperation(
+                        "While statement expects boolean value on top of stack".into(),
+                    ));
+                };
+
+                if val {
+                    for statement in statements {
                         self.interpret_statement(statement.clone())?;
                     }
-                    let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
-                        b
-                    } else {
-                        return Err(ConstantError::InvalidOperation(
-                                "While statement expects boolean value on top of stack".into(),
-                        ));
-                    };
-
-                    if val {
-                        for statement in statements {
-                            self.interpret_statement(statement.clone())?;
-                        }
-                    } else {
-                        break;
-                    }
+                } else {
+                    break;
                 }
-            }
+            },
             Statement::Empty => (),
         }
 
