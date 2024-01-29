@@ -148,6 +148,9 @@ impl Parser {
                 let mut s = Vec::new();
                 while !self.check_token(TokenType::EndIf) {
                     s.push(self.statement()?);
+                    // these previous_token checks are used to make it so that an if else if chain
+                    // doesnt require a large amount of endif's at the end, as long as one endif is
+                    // present then all the others that would be required are skipped over
                     if self.previous_token.token_type == TokenType::EndIf {
                         break;
                     }
@@ -211,6 +214,7 @@ impl Parser {
                         TokenType::Bind,
                         TokenType::Ident,
                         TokenType::If,
+                        TokenType::While,
                     ],
                 ]
                 .concat(),
