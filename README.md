@@ -21,8 +21,13 @@ swap // swaps the top 2 items on the stack
 drop // removes the top item from the stack
 
 // if statements
-if 10 < 20 do // if checks if the top stack item is true
-"this is true" print // these statements only run when the if is true
+10 bind x
+if x 20 > do // if checks if the top stack item is true
+    "this is true" print // these statements only run when the if is true
+elif x 15 > do
+    "now this is true" print
+else do
+    "non were true" print
 endif
 
 // while statements
