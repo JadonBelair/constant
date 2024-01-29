@@ -5,10 +5,10 @@
 
 if age 50 >= do
 	"you are older than 50" print
-else if age 20 >= do
+elif age 20 >= do
 	"you are between 20 and 50" print
-else if age 15 >= do
+elif age 15 >= do
 	"you are between 15 and 20 years old" print
-else
+else do
 	"you are under 15" print
 endif

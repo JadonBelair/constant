@@ -131,7 +131,7 @@ impl Interpreter {
 
                 self.idents.insert(ident.into(), val);
             }
-            Statement::If(ref conditions, ref statements, ref else_statements) => {
+            Statement::If(ref conditions, ref statements, ref elifs, ref else_statements) => {
                 for statement in conditions {
                     self.interpret_statement(statement.clone())?;
                 }
@@ -148,11 +148,40 @@ impl Interpreter {
                     for statement in statements {
                         self.interpret_statement(statement.clone())?;
                     }
-                } else if let Some(else_statements) = else_statements {
-                    for statement in else_statements {
-                        self.interpret_statement(statement.clone())?;
+                } else {
+                    let mut do_else = true;
+                    if let Some(elifs) = elifs {
+                        for (elif_conditions, elif_statements) in elifs {
+                            for elif_condition in elif_conditions {
+                                self.interpret_statement(elif_condition.clone())?;
+                            }
+                            let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
+                                b
+                            } else {
+                                return Err(ConstantError::InvalidOperation(
+                                    "If statement expects boolean value on top of stack".into(),
+                                ));
+                            };
+
+                            if val {
+                                do_else = false;
+                                for elif_statement in elif_statements {
+                                    self.interpret_statement(elif_statement.clone())?;
+                                }
+                                break;
+                            }
+                        }
+
+                        if do_else {
+                            if let Some(else_statements) = else_statements {
+                                for else_statement in else_statements {
+                                    self.interpret_statement(else_statement.clone())?;
+                                }
+                            }
+                        }
                     }
                 }
+
             }
             Statement::While(ref conditions, ref statements) => loop {
                 for statement in conditions {

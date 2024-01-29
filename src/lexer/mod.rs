@@ -43,6 +43,10 @@ lazy_static! {
             Token::new(TokenType::If, "if".into(), None),
         );
         h.insert(
+            String::from("elif"),
+            Token::new(TokenType::Elif, "elif".into(), None),
+        );
+        h.insert(
             String::from("else"),
             Token::new(TokenType::Else, "else".into(), None),
         );
