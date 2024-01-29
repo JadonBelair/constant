@@ -129,21 +129,10 @@ impl Parser {
                 self.match_token(TokenType::Else)?;
                 self.match_token(TokenType::Do)?;
 
-                while !self.check_token(TokenType::EndIf) {
-                    match self.statement() {
-                        Ok(statement) => else_statements.push(statement),
-                        Err(_) if self.check_token(TokenType::EOF) => {
-                            return Err(ConstantError::NonMatchingToken(
-                                TokenType::EOF,
-                                vec![TokenType::EndIf],
-                            ))
-                        }
-                        Err(e) => return Err(e),
-                    }
-                }
+                else_statements = self.get_statements_till(vec![TokenType::EndIf])?;
             }
-
             self.match_token(TokenType::EndIf)?;
+
             Ok(Statement::If(
                 conditions,
                 statements,
@@ -152,34 +141,13 @@ impl Parser {
             ))
         } else if self.check_token(TokenType::While) {
             self.match_token(TokenType::While)?;
-            let mut conditions = Vec::new();
-            while !self.check_token(TokenType::Do) {
-                match self.statement() {
-                    Ok(statement) => conditions.push(statement),
-                    Err(_) if self.check_token(TokenType::EOF) => {
-                        return Err(ConstantError::NonMatchingToken(
-                            TokenType::EOF,
-                            vec![TokenType::Do],
-                        ))
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
+            let conditions = self.get_statements_till(vec![TokenType::Do])?;
+
             self.match_token(TokenType::Do)?;
-            let mut statements = Vec::new();
-            while !self.check_token(TokenType::EndWhile) {
-                match self.statement() {
-                    Ok(statement) => statements.push(statement),
-                    Err(_) if self.check_token(TokenType::EOF) => {
-                        return Err(ConstantError::NonMatchingToken(
-                            TokenType::EOF,
-                            vec![TokenType::EndWhile],
-                        ))
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
+
+            let statements = self.get_statements_till(vec![TokenType::EndWhile])?;
             self.match_token(TokenType::EndWhile)?;
+
             Ok(Statement::While(conditions, statements))
         } else {
             Err(ConstantError::NonMatchingToken(
@@ -211,39 +179,31 @@ impl Parser {
     // gets the conditions and statements ran in an if block
     // but doesnt consume the ending elif, else, or endif
     fn if_block(&mut self) -> Result<(Vec<Statement>, Vec<Statement>), ConstantError> {
-        let mut conditions = Vec::new();
+        let conditions = self.get_statements_till(vec![TokenType::Do])?;
 
-        while !self.check_token(TokenType::Do) {
-            match self.statement() {
-                Ok(statement) => conditions.push(statement),
-                Err(_) if self.check_token(TokenType::EOF) => {
-                    return Err(ConstantError::NonMatchingToken(
-                        TokenType::EOF,
-                        vec![TokenType::Do],
-                    ))
-                }
-                Err(e) => return Err(e),
-            }
-        }
         self.match_token(TokenType::Do)?;
 
+        let statements =
+            self.get_statements_till(vec![TokenType::Elif, TokenType::Else, TokenType::EndIf])?;
+
+        Ok((conditions, statements))
+    }
+
+    fn get_statements_till(
+        &mut self,
+        tokens: Vec<TokenType>,
+    ) -> Result<Vec<Statement>, ConstantError> {
         let mut statements = Vec::new();
-        while !self.check_token(TokenType::Elif)
-            && !self.check_token(TokenType::Else)
-            && !self.check_token(TokenType::EndIf)
-        {
+        while !tokens.contains(&self.current_token.token_type) {
             match self.statement() {
                 Ok(statement) => statements.push(statement),
                 Err(_) if self.check_token(TokenType::EOF) => {
-                    return Err(ConstantError::NonMatchingToken(
-                        TokenType::EOF,
-                        vec![TokenType::Elif, TokenType::Else, TokenType::EndIf],
-                    ))
+                    return Err(ConstantError::NonMatchingToken(TokenType::EOF, tokens))
                 }
                 Err(e) => return Err(e),
             }
         }
 
-        Ok((conditions, statements))
+        Ok(statements)
     }
 }
