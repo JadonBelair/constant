@@ -60,6 +60,8 @@ pub enum TokenType {
     Elif,
     Else,
     While,
+    Proc,
+    Call,
     Do,
     End,
 

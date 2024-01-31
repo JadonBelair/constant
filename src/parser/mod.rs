@@ -147,6 +147,17 @@ impl Parser {
             self.match_token(TokenType::End)?;
 
             Ok(Statement::While(conditions, statements))
+        } else if self.check_token(TokenType::Proc) {
+            self.match_token(TokenType::Proc)?;
+            let ident = self.match_token(TokenType::Ident)?;
+            self.match_token(TokenType::Do)?;
+            let statements = self.get_statements_till(vec![TokenType::End])?;
+            self.match_token(TokenType::End)?;
+            Ok(Statement::Procedure(ident.lexeme, statements))
+        } else if self.check_token(TokenType::Call) {
+            self.match_token(TokenType::Call)?;
+            let ident = self.match_token(TokenType::Ident)?;
+            Ok(Statement::Call(ident.lexeme))
         } else {
             Err(ConstantError::NonMatchingToken(
                 self.current_token.token_type,
@@ -167,6 +178,8 @@ impl Parser {
                         TokenType::Ident,
                         TokenType::If,
                         TokenType::While,
+                        TokenType::Proc,
+                        TokenType::Call,
                     ],
                 ]
                 .concat(),

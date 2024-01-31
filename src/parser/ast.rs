@@ -13,6 +13,8 @@ pub enum Statement {
         Vec<Statement>,
     ),
     While(Vec<Statement>, Vec<Statement>),
+    Procedure(String, Vec<Statement>),
+    Call(String),
     Empty,
 }
 

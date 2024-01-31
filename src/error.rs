@@ -31,4 +31,7 @@ pub enum ConstantError {
 
     #[error("Identifier '{0}' does not exist")]
     IdentDoesNotExist(String),
+
+    #[error("Procedure '{0}' does not exist")]
+    ProcDoesNotExist(String),
 }

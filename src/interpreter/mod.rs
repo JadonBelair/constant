@@ -10,6 +10,7 @@ pub struct Interpreter {
     stack: Vec<Literal>,
     program: Vec<Statement>,
     idents: HashMap<String, Literal>,
+    procs: HashMap<String, Vec<Statement>>,
     current_statement: Statement,
     current_pos: usize,
 }
@@ -26,6 +27,7 @@ impl Interpreter {
             stack: Vec::new(),
             program,
             idents: HashMap::new(),
+            procs: HashMap::new(),
             current_statement,
             current_pos: 0,
         }
@@ -132,6 +134,12 @@ impl Interpreter {
                 };
 
                 self.idents.insert(ident.into(), val);
+
+                if self.procs.contains_key(ident) {
+                    // ensures that "ident" is either a literal
+                    // or a procedure but not both
+                    self.procs.remove(ident);
+                }
             }
             Statement::If(ref conditions, ref statements, ref elifs, ref else_statements) => {
                 for statement in conditions {
@@ -199,6 +207,22 @@ impl Interpreter {
                     break;
                 }
             },
+            Statement::Procedure(ref ident, ref statements) => {
+                self.procs.insert(ident.into(), statements.to_vec());
+
+                if self.idents.contains_key(ident) {
+                    self.idents.remove(ident);
+                }
+            }
+            Statement::Call(ref ident) => {
+                if let Some(statements) = self.procs.get(ident) {
+                    for statement in statements.clone() {
+                        self.interpret_statement(statement)?;
+                    }
+                } else {
+                    return Err(ConstantError::ProcDoesNotExist(ident.into()));
+                }
+            }
             Statement::Empty => (),
         }
 

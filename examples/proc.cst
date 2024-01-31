@@ -1,0 +1,11 @@
+// procedures can be made to run specific code whenever you want
+
+proc add_one do
+	1 +
+end
+
+10
+call add_one
+dup print
+call add_one
+print

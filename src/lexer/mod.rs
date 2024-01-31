@@ -55,6 +55,14 @@ lazy_static! {
             Token::new(TokenType::While, "while".into(), None),
         );
         h.insert(
+            String::from("proc"),
+            Token::new(TokenType::Proc, "proc".into(), None),
+        );
+        h.insert(
+            String::from("call"),
+            Token::new(TokenType::Call, "call".into(), None),
+        );
+        h.insert(
             String::from("do"),
             Token::new(TokenType::Do, "do".into(), None),
         );
