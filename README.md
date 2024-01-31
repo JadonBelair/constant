@@ -38,6 +38,11 @@ while x 20 < do // while loops only run while these statements evaluate to true
     bind x
 end
 
+// procedures
+proc hello do
+    "Hello from a procedure" print
+end
+
 // variables
 bind x // consumes and binds the top value on stack to x
 x // pushes the value bound to x to the stack, x does not change
