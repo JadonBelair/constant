@@ -13,15 +13,13 @@ fn main() -> Result<(), ConstantError> {
     if args.len() == 1 {
         Ok(Interpreter::new(Vec::new()).repl())
     } else if args.len() == 2 {
-        let file_contents = if let Ok(c) = std::fs::read_to_string(&args[1]) {
-            c
-        } else {
-            return Err(ConstantError::SourceFileNotFound(args[1].clone()));
-        };
+        let file_contents = std::fs::read_to_string(&args[1])
+            .map_err(|_| ConstantError::SourceFileNotFound(args[1].clone()))?;
 
         let tokens = Lexer::new(&file_contents).tokenize()?;
-        let ast = Parser::new(tokens).parse()?;
-        Ok(Interpreter::new(ast).interpret()?)
+        let ast = Parser::new(&tokens).parse()?;
+
+        Interpreter::new(ast).interpret()
     } else if args.len() > 2 {
         return Err(ConstantError::TooManyArgs);
     } else {

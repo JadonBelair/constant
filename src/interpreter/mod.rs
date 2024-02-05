@@ -243,7 +243,7 @@ impl Interpreter {
                     continue;
                 }
             };
-            let ast = match Parser::new(tokens).parse() {
+            let ast = match Parser::new(&tokens).parse() {
                 Ok(a) => a,
                 Err(e) => {
                     println!("{e}");

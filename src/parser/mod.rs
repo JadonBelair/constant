@@ -35,23 +35,17 @@ lazy_static! {
     };
 }
 
-pub struct Parser {
-    tokens: Vec<Token>,
+pub struct Parser<'a> {
+    tokens: &'a Vec<Token>,
     current_token: Token,
     current_pos: usize,
 }
 
-impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        let mut tokens = tokens;
-        if tokens.last() != Some(&Token::eof()) {
-            tokens.push(Token::eof());
-        }
-        let current_token = tokens[0].clone();
-
+impl<'a> Parser<'a> {
+    pub fn new(tokens: &'a Vec<Token>) -> Self {
         Self {
             tokens,
-            current_token,
+            current_token: tokens[0].clone(),
             current_pos: 0,
         }
     }
