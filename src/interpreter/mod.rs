@@ -11,39 +11,29 @@ pub struct Interpreter {
     program: Vec<Statement>,
     idents: HashMap<String, Literal>,
     procs: HashMap<String, Vec<Statement>>,
-    current_statement: Statement,
-    current_pos: usize,
 }
 
 impl Interpreter {
     pub fn new(program: Vec<Statement>) -> Self {
-        let mut program = program;
-        if program.last() != Some(&Statement::Empty) {
-            program.push(Statement::Empty);
-        }
-        let current_statement = program[0].clone();
-
         Self {
             stack: Vec::new(),
             program,
             idents: HashMap::new(),
             procs: HashMap::new(),
-            current_statement,
-            current_pos: 0,
         }
     }
 
     pub fn interpret(&mut self) -> Result<(), ConstantError> {
         for statement in self.program.clone() {
-            self.interpret_statement(statement)?;
+            self.interpret_statement(&statement)?;
         }
         Ok(())
     }
 
-    fn interpret_statement(&mut self, statement: Statement) -> Result<(), ConstantError> {
+    fn interpret_statement(&mut self, statement: &Statement) -> Result<(), ConstantError> {
         match statement {
-            Statement::Push(Value::Literal(ref l)) => self.stack.push(l.clone()),
-            Statement::Push(Value::Ident(ref i)) => {
+            Statement::Push(Value::Literal(l)) => self.stack.push(l.clone()),
+            Statement::Push(Value::Ident(i)) => {
                 if let Some(v) = self.idents.get(i) {
                     self.stack.push(v.clone());
                 } else {
@@ -98,26 +88,26 @@ impl Interpreter {
                     return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
                 };
 
-                if o == DoubleOpType::Swap {
+                if *o == DoubleOpType::Swap {
                     self.stack.push(second.clone());
                 }
 
-                let res = match o {
-                    DoubleOpType::Add => first.clone() + second.clone(),
-                    DoubleOpType::Sub => first.clone() - second.clone(),
-                    DoubleOpType::Mul => first.clone() * second.clone(),
-                    DoubleOpType::Div => first.clone() / second.clone(),
-                    DoubleOpType::Mod => first.clone() % second.clone(),
-                    DoubleOpType::Swap => Ok(first.clone()),
-                    DoubleOpType::GT => Ok(Literal::Bool(first.clone() > second.clone())),
-                    DoubleOpType::GTEq => Ok(Literal::Bool(first.clone() >= second.clone())),
-                    DoubleOpType::LT => Ok(Literal::Bool(first.clone() < second.clone())),
-                    DoubleOpType::LTEq => Ok(Literal::Bool(first.clone() <= second.clone())),
-                    DoubleOpType::Eq => Ok(Literal::Bool(first.clone() == second.clone())),
-                    DoubleOpType::NotEq => Ok(Literal::Bool(first.clone() != second.clone())),
+                let res = |x: Literal, y: Literal| match o {
+                    DoubleOpType::Add => x + y,
+                    DoubleOpType::Sub => x - y,
+                    DoubleOpType::Mul => x * y,
+                    DoubleOpType::Div => x / y,
+                    DoubleOpType::Mod => x % y,
+                    DoubleOpType::Swap => Ok(x),
+                    DoubleOpType::GT => Ok(Literal::Bool(x > y)),
+                    DoubleOpType::GTEq => Ok(Literal::Bool(x >= y)),
+                    DoubleOpType::LT => Ok(Literal::Bool(x < y)),
+                    DoubleOpType::LTEq => Ok(Literal::Bool(x <= y)),
+                    DoubleOpType::Eq => Ok(Literal::Bool(x == y)),
+                    DoubleOpType::NotEq => Ok(Literal::Bool(x != y)),
                 };
 
-                match res {
+                match res(first.clone(), second.clone()) {
                     Ok(v) => self.stack.push(v),
                     Err(e) => {
                         self.stack.push(first);
@@ -126,7 +116,7 @@ impl Interpreter {
                     }
                 }
             }
-            Statement::Bind(ref ident) => {
+            Statement::Bind(ident) => {
                 let val = if let Some(val) = self.stack.pop() {
                     val
                 } else {
@@ -141,9 +131,9 @@ impl Interpreter {
                     self.procs.remove(ident);
                 }
             }
-            Statement::If(ref conditions, ref statements, ref elifs, ref else_statements) => {
+            Statement::If(conditions, statements, elifs, else_statements) => {
                 for statement in conditions {
-                    self.interpret_statement(statement.clone())?;
+                    self.interpret_statement(statement)?;
                 }
 
                 let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
@@ -156,13 +146,13 @@ impl Interpreter {
 
                 if val {
                     for statement in statements {
-                        self.interpret_statement(statement.clone())?;
+                        self.interpret_statement(statement)?;
                     }
                 } else {
                     let mut do_else = true;
                     for (elif_conditions, elif_statements) in elifs {
                         for elif_condition in elif_conditions {
-                            self.interpret_statement(elif_condition.clone())?;
+                            self.interpret_statement(elif_condition)?;
                         }
                         let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
                             b
@@ -175,21 +165,21 @@ impl Interpreter {
                         if val {
                             do_else = false;
                             for elif_statement in elif_statements {
-                                self.interpret_statement(elif_statement.clone())?;
+                                self.interpret_statement(elif_statement)?;
                             }
                             break;
                         }
                     }
                     if do_else {
                         for else_statement in else_statements {
-                            self.interpret_statement(else_statement.clone())?;
+                            self.interpret_statement(else_statement)?;
                         }
                     }
                 }
             }
-            Statement::While(ref conditions, ref statements) => loop {
+            Statement::While(conditions, statements) => loop {
                 for statement in conditions {
-                    self.interpret_statement(statement.clone())?;
+                    self.interpret_statement(statement)?;
                 }
                 let val = if let Some(Literal::Bool(b)) = self.stack.pop() {
                     b
@@ -201,23 +191,23 @@ impl Interpreter {
 
                 if val {
                     for statement in statements {
-                        self.interpret_statement(statement.clone())?;
+                        self.interpret_statement(statement)?;
                     }
                 } else {
                     break;
                 }
             },
-            Statement::Procedure(ref ident, ref statements) => {
+            Statement::Procedure(ident, statements) => {
                 self.procs.insert(ident.into(), statements.to_vec());
 
                 if self.idents.contains_key(ident) {
                     self.idents.remove(ident);
                 }
             }
-            Statement::Call(ref ident) => {
-                if let Some(statements) = self.procs.get(ident) {
-                    for statement in statements.clone() {
-                        self.interpret_statement(statement)?;
+            Statement::Call(ident) => {
+                if let Some(statements) = self.procs.get(ident).cloned() {
+                    for statement in statements {
+                        self.interpret_statement(&statement)?;
                     }
                 } else {
                     return Err(ConstantError::ProcDoesNotExist(ident.into()));
@@ -262,8 +252,6 @@ impl Interpreter {
             };
 
             self.program = ast;
-            self.current_statement = self.program[0].clone();
-            self.current_pos = 0;
 
             if let Err(e) = self.interpret() {
                 println!("{e}");

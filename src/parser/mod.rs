@@ -68,7 +68,7 @@ impl Parser {
     }
 
     fn match_token(&mut self, token: TokenType) -> Result<Token, ConstantError> {
-        if self.check_token(token.clone()) {
+        if self.check_token(token) {
             let tok = self.current_token.clone();
             self.next();
             Ok(tok)

@@ -294,7 +294,6 @@ impl Lexer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
 
     #[test]
     fn lexer_next() {
@@ -310,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn lexer_next_token_number() -> Result<()> {
+    fn lexer_next_token_number() -> Result<(), ConstantError> {
         let mut l = Lexer::new("123.456 123");
 
         assert!(l.next_token()?.literal.unwrap() == Literal::Number(123.456));
@@ -321,7 +320,7 @@ mod tests {
     }
 
     #[test]
-    fn lexer_next_token_string() -> Result<()> {
+    fn lexer_next_token_string() -> Result<(), ConstantError> {
         let mut l = Lexer::new("\"this is a test string\" \"this is another test string\"");
 
         assert!(
@@ -337,7 +336,7 @@ mod tests {
     }
 
     #[test]
-    fn lexer_next_token_bool() -> Result<()> {
+    fn lexer_next_token_bool() -> Result<(), ConstantError> {
         let mut l = Lexer::new("true false true");
 
         assert!(l.next_token()?.literal.unwrap() == Literal::Bool(true));
@@ -349,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn lexer_next_token_built_in() -> Result<()> {
+    fn lexer_next_token_built_in() -> Result<(), ConstantError> {
         let mut l = Lexer::new("print dup dup print");
 
         assert!(l.next_token()?.token_type == TokenType::Print);
@@ -362,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    fn lexer_skip_comments() -> Result<()> {
+    fn lexer_skip_comments() -> Result<(), ConstantError> {
         let mut l = Lexer::new("// this is a comment");
 
         assert!(l.next_token()?.token_type == TokenType::EOF);
