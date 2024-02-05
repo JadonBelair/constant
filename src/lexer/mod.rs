@@ -8,68 +8,23 @@ use crate::error::ConstantError;
 mod token;
 
 lazy_static! {
-    static ref KEYWORDS: HashMap<String, Token> = {
+    static ref KEYWORDS: HashMap<String, TokenType> = {
         let mut h = HashMap::new();
-        h.insert(
-            String::from("true"),
-            Token::new(TokenType::Bool, "true".into(), Some(Literal::Bool(true))),
-        );
-        h.insert(
-            String::from("false"),
-            Token::new(TokenType::Bool, "false".into(), Some(Literal::Bool(false))),
-        );
-        h.insert(
-            String::from("print"),
-            Token::new(TokenType::Print, "print".into(), None),
-        );
-        h.insert(
-            String::from("dup"),
-            Token::new(TokenType::Dup, "dup".into(), None),
-        );
-        h.insert(
-            String::from("swap"),
-            Token::new(TokenType::Swap, "swap".into(), None),
-        );
-        h.insert(
-            String::from("drop"),
-            Token::new(TokenType::Drop, "drop".into(), None),
-        );
-        h.insert(
-            String::from("bind"),
-            Token::new(TokenType::Bind, "bind".into(), None),
-        );
-        h.insert(
-            String::from("if"),
-            Token::new(TokenType::If, "if".into(), None),
-        );
-        h.insert(
-            String::from("elif"),
-            Token::new(TokenType::Elif, "elif".into(), None),
-        );
-        h.insert(
-            String::from("else"),
-            Token::new(TokenType::Else, "else".into(), None),
-        );
-        h.insert(
-            String::from("while"),
-            Token::new(TokenType::While, "while".into(), None),
-        );
-        h.insert(
-            String::from("proc"),
-            Token::new(TokenType::Proc, "proc".into(), None),
-        );
-        h.insert(
-            String::from("call"),
-            Token::new(TokenType::Call, "call".into(), None),
-        );
-        h.insert(
-            String::from("do"),
-            Token::new(TokenType::Do, "do".into(), None),
-        );
-        h.insert(
-            String::from("end"),
-            Token::new(TokenType::End, "end".into(), None),
-        );
+        h.insert(String::from("true"), TokenType::Bool);
+        h.insert(String::from("false"), TokenType::Bool);
+        h.insert(String::from("print"), TokenType::Print);
+        h.insert(String::from("dup"), TokenType::Dup);
+        h.insert(String::from("swap"), TokenType::Swap);
+        h.insert(String::from("drop"), TokenType::Drop);
+        h.insert(String::from("bind"), TokenType::Bind);
+        h.insert(String::from("if"), TokenType::If);
+        h.insert(String::from("elif"), TokenType::Elif);
+        h.insert(String::from("else"), TokenType::Else);
+        h.insert(String::from("while"), TokenType::While);
+        h.insert(String::from("proc"), TokenType::Proc);
+        h.insert(String::from("call"), TokenType::Call);
+        h.insert(String::from("do"), TokenType::Do);
+        h.insert(String::from("end"), TokenType::End);
         h
     };
 }
@@ -265,12 +220,18 @@ impl Lexer {
                     self.next();
                 }
 
-                let text = self.source[start_pos..self.current_pos].iter().collect();
-                if let Some(k) = KEYWORDS.get(&text) {
-                    Ok(k.clone())
-                } else {
-                    Ok(Token::new(TokenType::Ident, text, None))
-                }
+                let text = self.source[start_pos..self.current_pos]
+                    .iter()
+                    .collect::<String>();
+
+                let tt = *KEYWORDS.get(&text).unwrap_or(&TokenType::Ident);
+                let literal = match text.as_str() {
+                    "true" => Some(Literal::Bool(true)),
+                    "false" => Some(Literal::Bool(false)),
+                    _ => None,
+                };
+
+                Ok(Token::new(tt, text, literal))
             }
             '\0' => Ok(Token::eof()),
             _ => Err(ConstantError::InvalidString(
