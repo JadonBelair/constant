@@ -216,7 +216,7 @@ impl Lexer {
             'a'..='z' | 'A'..='Z' => {
                 let start_pos = self.current_pos;
 
-                while !self.current_char.is_whitespace() && self.current_char != '\0' {
+                while self.current_char.is_alphanumeric() || self.current_char == '_' {
                     self.next();
                 }
 
