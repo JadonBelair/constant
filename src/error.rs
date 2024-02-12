@@ -26,8 +26,8 @@ pub enum ConstantError {
     #[error("Invalid operation: {0}")]
     InvalidOperation(String),
 
-    #[error("Expected one of {1:?}, found {0:?}")]
-    NonMatchingToken(TokenType, Vec<TokenType>),
+    #[error("Unexpected Token: {0:?}")]
+    UnexpectedToken(TokenType),
 
     #[error("Identifier '{0}' does not exist")]
     IdentDoesNotExist(String),

@@ -67,9 +67,8 @@ impl<'a> Parser<'a> {
             self.next();
             Ok(tok)
         } else {
-            Err(ConstantError::NonMatchingToken(
+            Err(ConstantError::UnexpectedToken(
                 self.current_token.token_type,
-                vec![token],
             ))
         }
     }
@@ -153,30 +152,8 @@ impl<'a> Parser<'a> {
             let ident = self.match_token(TokenType::Ident)?;
             Ok(Statement::Call(ident.lexeme))
         } else {
-            Err(ConstantError::NonMatchingToken(
+            Err(ConstantError::UnexpectedToken(
                 self.current_token.token_type,
-                vec![
-                    SINGLE_OPERATIONS
-                        .keys()
-                        .map(|k| *k)
-                        .collect::<Vec<TokenType>>(),
-                    DOUBLE_OPERATIONS
-                        .keys()
-                        .map(|k| *k)
-                        .collect::<Vec<TokenType>>(),
-                    vec![
-                        TokenType::Number,
-                        TokenType::Bool,
-                        TokenType::String,
-                        TokenType::Bind,
-                        TokenType::Ident,
-                        TokenType::If,
-                        TokenType::While,
-                        TokenType::Proc,
-                        TokenType::Call,
-                    ],
-                ]
-                .concat(),
             ))
         }
     }
@@ -202,7 +179,11 @@ impl<'a> Parser<'a> {
         while !tokens.contains(&self.current_token.token_type) {
             match self.statement() {
                 Ok(statement) => statements.push(statement),
-                Err(_) => return Err(ConstantError::NonMatchingToken(TokenType::EOF, tokens)),
+                Err(_) => {
+                    return Err(ConstantError::UnexpectedToken(
+                        self.current_token.token_type,
+                    ))
+                }
             }
         }
 
