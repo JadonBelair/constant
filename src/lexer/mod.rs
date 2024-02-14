@@ -160,6 +160,30 @@ impl Lexer {
                     ))
                 }
             }
+            '&' => {
+                self.next();
+                if self.current_char == '&' {
+                    self.next();
+                    Ok(Token::new(TokenType::And, "&&".into(), None))
+                } else {
+                    Err(ConstantError::InvalidString(
+                        format!("&{}", self.current_char),
+                        self.current_pos - 1,
+                    ))
+                }
+            }
+            '|' => {
+                self.next();
+                if self.current_char == '|' {
+                    self.next();
+                    Ok(Token::new(TokenType::Or, "||".into(), None))
+                } else {
+                    Err(ConstantError::InvalidString(
+                        format!("|{}", self.current_char),
+                        self.current_pos - 1,
+                    ))
+                }
+            }
             '0'..='9' => {
                 let start_pos = self.current_pos;
                 while self.current_char.is_numeric() {

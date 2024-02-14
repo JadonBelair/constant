@@ -22,6 +22,8 @@ lazy_static! {
         h.insert(TokenType::LTEq, DoubleOpType::LTEq);
         h.insert(TokenType::Eq, DoubleOpType::Eq);
         h.insert(TokenType::NotEq, DoubleOpType::NotEq);
+        h.insert(TokenType::And, DoubleOpType::And);
+        h.insert(TokenType::Or, DoubleOpType::Or);
         h.insert(TokenType::Swap, DoubleOpType::Swap);
         h.insert(TokenType::Percent, DoubleOpType::Mod);
         h

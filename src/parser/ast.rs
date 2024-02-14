@@ -31,6 +31,8 @@ pub enum DoubleOpType {
     LTEq,
     Eq,
     NotEq,
+    And,
+    Or,
     Swap,
 }
 

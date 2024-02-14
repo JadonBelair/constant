@@ -105,6 +105,18 @@ impl Interpreter {
                     DoubleOpType::LTEq => Ok(Literal::Bool(x <= y)),
                     DoubleOpType::Eq => Ok(Literal::Bool(x == y)),
                     DoubleOpType::NotEq => Ok(Literal::Bool(x != y)),
+                    DoubleOpType::And | DoubleOpType::Or => {
+                        match (x, y) {
+                            (Literal::Bool(a), Literal::Bool(b)) => {
+                                match o {
+                                    DoubleOpType::And => Ok(Literal::Bool(a && b)),
+                                    DoubleOpType::Or => Ok(Literal::Bool(a || b)),
+                                    _ => unreachable!()
+                                }
+                            }
+                            _ => return Err(ConstantError::InvalidOperation("Logical operations can only be performed on bools".into()))
+                        }
+                    }
                 };
 
                 match res(first.clone(), second.clone()) {

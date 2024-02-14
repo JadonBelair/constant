@@ -44,6 +44,8 @@ pub enum TokenType {
     GTEq,
     LTEq,
     NotEq,
+    And,
+    Or,
 
     // data types
     Number,
