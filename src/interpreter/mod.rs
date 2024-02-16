@@ -50,7 +50,7 @@ impl Interpreter {
                 let val = if let Some(val) = self.stack.pop() {
                     val
                 } else {
-                    return Err(ConstantError::InvalidStackAmount(String::from(action), 1));
+                    return Err(ConstantError::InvalidStackAmount(action.into(), 1));
                 };
 
                 match o {
@@ -73,20 +73,13 @@ impl Interpreter {
                     _ => "Comparison",
                 };
 
-                let second = if let Some(val) = self.stack.pop() {
-                    val
-                } else {
-                    return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
-                };
-                let first = if let Some(val) = self.stack.pop() {
-                    val
-                } else {
-                    // we restore the stack on a failed operation
-                    // doesn't really matter for interpreted mode
-                    // but it's a nice feature to have in the REPL
-                    self.stack.push(second);
-                    return Err(ConstantError::InvalidStackAmount(String::from(action), 2));
-                };
+                if self.stack.len() < 2 {
+                    return Err(ConstantError::InvalidStackAmount(action.into(), 2));
+                }
+
+                // these can just be unwrapped thanks to the line above
+                let second = self.stack.pop().unwrap();
+                let first = self.stack.pop().unwrap();
 
                 if *o == DoubleOpType::Swap {
                     self.stack.push(second.clone());
@@ -105,18 +98,18 @@ impl Interpreter {
                     DoubleOpType::LTEq => Ok(Literal::Bool(x <= y)),
                     DoubleOpType::Eq => Ok(Literal::Bool(x == y)),
                     DoubleOpType::NotEq => Ok(Literal::Bool(x != y)),
-                    DoubleOpType::And | DoubleOpType::Or => {
-                        match (x, y) {
-                            (Literal::Bool(a), Literal::Bool(b)) => {
-                                match o {
-                                    DoubleOpType::And => Ok(Literal::Bool(a && b)),
-                                    DoubleOpType::Or => Ok(Literal::Bool(a || b)),
-                                    _ => unreachable!()
-                                }
-                            }
-                            _ => return Err(ConstantError::InvalidOperation("Logical operations can only be performed on bools".into()))
+                    DoubleOpType::And | DoubleOpType::Or => match (x, y) {
+                        (Literal::Bool(a), Literal::Bool(b)) => match o {
+                            DoubleOpType::And => Ok(Literal::Bool(a && b)),
+                            DoubleOpType::Or => Ok(Literal::Bool(a || b)),
+                            _ => unreachable!(),
+                        },
+                        _ => {
+                            return Err(ConstantError::InvalidOperation(
+                                "Logical operations can only be performed on bools".into(),
+                            ))
                         }
-                    }
+                    },
                 };
 
                 match res(first.clone(), second.clone()) {

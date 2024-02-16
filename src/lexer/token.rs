@@ -98,21 +98,21 @@ impl Add<Literal> for Literal {
                 if let Self::Number(m) = rhs {
                     Ok(Self::Number(n + m))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from(
-                        "Can only add numbers to numbers",
-                    )))
+                    Err(ConstantError::InvalidOperation(
+                        "Can only add numbers to numbers".into(),
+                    ))
                 }
             }
-            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot add booleans",
-            ))),
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(
+                "Cannot add booleans".into(),
+            )),
             Self::String(s) => {
                 if let Self::String(z) = rhs {
                     Ok(Self::String(s + &z))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from(
-                        "Can only add strings to strings",
-                    )))
+                    Err(ConstantError::InvalidOperation(
+                        "Can only add strings to strings".into(),
+                    ))
                 }
             }
         }
@@ -128,17 +128,17 @@ impl Sub<Literal> for Literal {
                 if let Self::Number(m) = rhs {
                     Ok(Self::Number(n - m))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from(
-                        "Can only subtract numbers from numbers",
-                    )))
+                    Err(ConstantError::InvalidOperation(
+                        "Can only subtract numbers from numbers".into(),
+                    ))
                 }
             }
-            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot subtract booleans",
-            ))),
-            Self::String(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot subtract strings",
-            ))),
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(
+                "Cannot subtract booleans".into(),
+            )),
+            Self::String(_) => Err(ConstantError::InvalidOperation(
+                "Cannot subtract strings".into(),
+            )),
         }
     }
 }
@@ -152,21 +152,21 @@ impl Mul<Literal> for Literal {
                 if let Self::Number(m) = rhs {
                     Ok(Self::Number(n * m))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from(
-                        "Can only multiply numbers with numbers",
-                    )))
+                    Err(ConstantError::InvalidOperation(
+                        "Can only multiply numbers with numbers".into(),
+                    ))
                 }
             }
-            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot multiply booleans",
-            ))),
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(
+                "Cannot multiply booleans".into(),
+            )),
             Self::String(s) => {
                 if let Self::Number(n) = rhs {
                     Ok(Self::String(s.repeat(n as usize)))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from(
-                        "Can only multiply strings with numbers",
-                    )))
+                    Err(ConstantError::InvalidOperation(
+                        "Can only multiply strings with numbers".into(),
+                    ))
                 }
             }
         }
@@ -182,17 +182,17 @@ impl Div<Literal> for Literal {
                 if let Self::Number(m) = rhs {
                     Ok(Self::Number(n / m))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from(
-                        "Can only divide numbers with number",
-                    )))
+                    Err(ConstantError::InvalidOperation(
+                        "Can only divide numbers with number".into(),
+                    ))
                 }
             }
-            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot divide with booleans",
-            ))),
-            Self::String(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot divide with strings",
-            ))),
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(
+                "Cannot divide with booleans".into(),
+            )),
+            Self::String(_) => Err(ConstantError::InvalidOperation(
+                "Cannot divide with strings".into(),
+            )),
         }
     }
 }
@@ -206,17 +206,17 @@ impl Rem<Literal> for Literal {
                 if let Self::Number(m) = rhs {
                     Ok(Self::Number(n % m))
                 } else {
-                    Err(ConstantError::InvalidOperation(String::from(
-                        "Can only mod numbers with numbers",
-                    )))
+                    Err(ConstantError::InvalidOperation(
+                        "Can only mod numbers with numbers".into(),
+                    ))
                 }
             }
-            Self::Bool(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot mod with booleans",
-            ))),
-            Self::String(_) => Err(ConstantError::InvalidOperation(String::from(
-                "Cannot mod with strings",
-            ))),
+            Self::Bool(_) => Err(ConstantError::InvalidOperation(
+                "Cannot mod with booleans".into(),
+            )),
+            Self::String(_) => Err(ConstantError::InvalidOperation(
+                "Cannot mod with strings".into(),
+            )),
         }
     }
 }
