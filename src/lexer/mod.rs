@@ -272,6 +272,10 @@ impl Lexer {
             tokens.push(self.next_token()?);
         }
 
+        if tokens.last() != Some(&Token::eof()) {
+            tokens.push(Token::eof());
+        }
+
         Ok(tokens)
     }
 }
@@ -284,22 +288,22 @@ mod tests {
     fn lexer_next() {
         let mut l = Lexer::new("ah");
 
-        assert!(l.current_char == 'a');
+        assert_eq!(l.current_char, 'a');
         l.next();
-        assert!(l.current_char == 'h');
+        assert_eq!(l.current_char, 'h');
         l.next();
-        assert!(l.current_char == '\0');
+        assert_eq!(l.current_char, '\0');
         l.next();
-        assert!(l.current_char == '\0');
+        assert_eq!(l.current_char, '\0');
     }
 
     #[test]
     fn lexer_next_token_number() -> Result<(), ConstantError> {
         let mut l = Lexer::new("123.456 123");
 
-        assert!(l.next_token()?.literal.unwrap() == Literal::Number(123.456));
-        assert!(l.next_token()?.literal.unwrap() == Literal::Number(123.0));
-        assert!(l.next_token()?.token_type == TokenType::EOF);
+        assert_eq!(l.next_token()?.literal.unwrap(), Literal::Number(123.456));
+        assert_eq!(l.next_token()?.literal.unwrap(), Literal::Number(123.0));
+        assert_eq!(l.next_token()?.token_type, TokenType::EOF);
 
         Ok(())
     }
@@ -308,14 +312,15 @@ mod tests {
     fn lexer_next_token_string() -> Result<(), ConstantError> {
         let mut l = Lexer::new("\"this is a test string\" \"this is another test string\"");
 
-        assert!(
-            l.next_token()?.literal.unwrap() == Literal::String("this is a test string".into())
+        assert_eq!(
+            l.next_token()?.literal.unwrap(),
+            Literal::String("this is a test string".into())
         );
-        assert!(
-            l.next_token()?.literal.unwrap()
-                == Literal::String("this is another test string".into())
+        assert_eq!(
+            l.next_token()?.literal.unwrap(),
+            Literal::String("this is another test string".into())
         );
-        assert!(l.next_token()?.token_type == TokenType::EOF);
+        assert_eq!(l.next_token()?.token_type, TokenType::EOF);
 
         Ok(())
     }
@@ -324,10 +329,10 @@ mod tests {
     fn lexer_next_token_bool() -> Result<(), ConstantError> {
         let mut l = Lexer::new("true false true");
 
-        assert!(l.next_token()?.literal.unwrap() == Literal::Bool(true));
-        assert!(l.next_token()?.literal.unwrap() == Literal::Bool(false));
-        assert!(l.next_token()?.literal.unwrap() == Literal::Bool(true));
-        assert!(l.next_token()?.token_type == TokenType::EOF);
+        assert_eq!(l.next_token()?.literal.unwrap(), Literal::Bool(true));
+        assert_eq!(l.next_token()?.literal.unwrap(), Literal::Bool(false));
+        assert_eq!(l.next_token()?.literal.unwrap(), Literal::Bool(true));
+        assert_eq!(l.next_token()?.token_type, TokenType::EOF);
 
         Ok(())
     }
@@ -336,11 +341,11 @@ mod tests {
     fn lexer_next_token_built_in() -> Result<(), ConstantError> {
         let mut l = Lexer::new("print dup dup print");
 
-        assert!(l.next_token()?.token_type == TokenType::Print);
-        assert!(l.next_token()?.token_type == TokenType::Dup);
-        assert!(l.next_token()?.token_type == TokenType::Dup);
-        assert!(l.next_token()?.token_type == TokenType::Print);
-        assert!(l.next_token()?.token_type == TokenType::EOF);
+        assert_eq!(l.next_token()?.token_type, TokenType::Print);
+        assert_eq!(l.next_token()?.token_type, TokenType::Dup);
+        assert_eq!(l.next_token()?.token_type, TokenType::Dup);
+        assert_eq!(l.next_token()?.token_type, TokenType::Print);
+        assert_eq!(l.next_token()?.token_type, TokenType::EOF);
 
         Ok(())
     }
@@ -349,7 +354,7 @@ mod tests {
     fn lexer_skip_comments() -> Result<(), ConstantError> {
         let mut l = Lexer::new("// this is a comment");
 
-        assert!(l.next_token()?.token_type == TokenType::EOF);
+        assert_eq!(l.next_token()?.token_type, TokenType::EOF);
 
         Ok(())
     }

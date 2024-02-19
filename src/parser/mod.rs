@@ -192,3 +192,68 @@ impl<'a> Parser<'a> {
         Ok(statements)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::lexer::{Lexer, Literal};
+
+    use super::*;
+
+    #[test]
+    fn parse_push() -> Result<(), ConstantError> {
+        let source = "1 \"test\" true";
+        let tok = Lexer::new(source).tokenize()?;
+        let ast = Parser::new(&tok).parse()?;
+
+        assert_eq!(ast.len(), 4);
+        assert_eq!(
+            ast[0],
+            Statement::Push(Value::Literal(Literal::Number(1.0)))
+        );
+        assert_eq!(
+            ast[1],
+            Statement::Push(Value::Literal(Literal::String("test".into())))
+        );
+        assert_eq!(ast[2], Statement::Push(Value::Literal(Literal::Bool(true))));
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_math() -> Result<(), ConstantError> {
+        let source = "+ - * /";
+        let tok = Lexer::new(source).tokenize()?;
+        let ast = Parser::new(&tok).parse()?;
+
+        assert_eq!(ast.len(), 5);
+        assert_eq!(ast[0], Statement::DoubleOperation(DoubleOpType::Add));
+        assert_eq!(ast[1], Statement::DoubleOperation(DoubleOpType::Sub));
+        assert_eq!(ast[2], Statement::DoubleOperation(DoubleOpType::Mul));
+        assert_eq!(ast[3], Statement::DoubleOperation(DoubleOpType::Div));
+
+        Ok(())
+    }
+
+    #[test]
+    fn parse_if() -> Result<(), ConstantError> {
+        let source = "if true do \"hello\" print end";
+        let tok = Lexer::new(source).tokenize()?;
+        let ast = Parser::new(&tok).parse()?;
+
+        assert_eq!(ast.len(), 2);
+        assert_eq!(
+            ast[0],
+            Statement::If(
+                vec![Statement::Push(Value::Literal(Literal::Bool(true)))],
+                vec![
+                    Statement::Push(Value::Literal(Literal::String("hello".into()))),
+                    Statement::SingleOperation(SingleOpType::Print)
+                ],
+                vec![],
+                vec![],
+            )
+        );
+
+        Ok(())
+    }
+}
