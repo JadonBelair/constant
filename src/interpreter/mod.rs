@@ -105,7 +105,7 @@ impl Interpreter {
                             _ => unreachable!(),
                         },
                         _ => {
-                            return Err(ConstantError::InvalidOperation(
+                            Err(ConstantError::InvalidOperation(
                                 "Logical operations can only be performed on bools".into(),
                             ))
                         }

@@ -36,7 +36,7 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    pub fn new<'a>(source: &'a str) -> Self {
+    pub fn new(source: &str) -> Self {
         let mut source = source.chars().collect::<Vec<char>>();
         if source.last() != Some(&'\0') {
             source.push('\0');

@@ -11,7 +11,8 @@ mod parser;
 fn main() -> Result<(), ConstantError> {
     let args = std::env::args().collect::<Vec<String>>();
     if args.len() == 1 {
-        Ok(Interpreter::new(Vec::new()).repl())
+        Interpreter::new(Vec::new()).repl();
+        Ok(())
     } else if args.len() == 2 {
         let file_contents = std::fs::read_to_string(&args[1])
             .map_err(|_| ConstantError::SourceFileNotFound(args[1].clone()))?;
